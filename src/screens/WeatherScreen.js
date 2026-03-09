@@ -1,273 +1,208 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 export default function WeatherScreen() {
-  const [weather, setWeather] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  // Mock weather data - no API calls, no async, no crashes
+  const todayWeather = {
+    location: 'Milwaukee, WI',
+    temperature: 58,
+    condition: 'Partly Cloudy',
+    windSpeed: 12,
+    windDirection: 'NW',
+    humidity: 65,
+    fishingCondition: 'Good',
+    emoji: '⛅'
+  };
 
-  const fetchWeather = async () => {
-    try {
-      // Mock weather data for Wisconsin
-      const mockWeatherData = {
-        location: 'Madison, WI',
-        temperature: 58,
-        condition: 'Partly Cloudy',
-        windSpeed: 12,
-        windDirection: 'NW',
-        humidity: 65,
-        pressure: 1013,
-        uvIndex: 4,
-        fishingCondition: 'Good',
-        recommendation: 'Light overcast is ideal for fishing. Wind is acceptable for most techniques.',
-        forecast: [
-          { day: 'Monday', high: 62, low: 48, condition: 'Sunny', windSpeed: 8 },
-          { day: 'Tuesday', high: 65, low: 50, condition: 'Cloudy', windSpeed: 10 },
-          { day: 'Wednesday', high: 58, low: 45, condition: 'Rainy', windSpeed: 15 },
-          { day: 'Thursday', high: 60, low: 48, condition: 'Partly Cloudy', windSpeed: 12 },
-          { day: 'Friday', high: 68, low: 52, condition: 'Sunny', windSpeed: 6 },
-        ]
-      };
-      
-      setWeather(mockWeatherData);
-    } catch (error) {
-      console.error('Weather fetch error:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  const forecast = [
+    { day: 'Tomorrow', high: 62, low: 48, condition: 'Sunny', windSpeed: 8, emoji: '☀️', rating: '⭐⭐⭐⭐' },
+    { day: 'Wednesday', high: 65, low: 50, condition: 'Cloudy', windSpeed: 10, emoji: '☁️', rating: '⭐⭐⭐⭐⭐' },
+    { day: 'Thursday', high: 58, low: 45, condition: 'Rainy', windSpeed: 15, emoji: '🌧️', rating: '⭐⭐⭐' },
+  ];
+
+  const getFishingColor = (condition) => {
+    switch (condition) {
+      case 'Good': return '#2E7D32';
+      case 'Excellent': return '#1B5E20';
+      case 'Fair': return '#E65100';
+      default: return '#01579B';
     }
   };
 
-  useEffect(() => {
-    fetchWeather();
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchWeather();
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#004E89" />
-      </View>
-    );
-  }
-
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      {weather && (
-        <>
-          <View style={styles.currentWeather}>
-            <View style={styles.locationHeader}>
-              <Feather name="map-pin" size={18} color="#666" />
-              <Text style={styles.location}>{weather.location}</Text>
-            </View>
+    <View style={styles.container}>
+      {/* Today's Weather - Large */}
+      <View style={styles.todayContainer}>
+        <View style={styles.todayTop}>
+          <Text style={styles.emoji}>{todayWeather.emoji}</Text>
+          <View style={styles.todayInfo}>
+            <Text style={styles.condition}>{todayWeather.condition}</Text>
+            <Text style={styles.location}>{todayWeather.location}</Text>
+          </View>
+        </View>
 
-            <View style={styles.temperatureDisplay}>
-              <Feather name="cloud" size={64} color="#004E89" />
-              <View style={styles.tempInfo}>
-                <Text style={styles.temperature}>{weather.temperature}°F</Text>
-                <Text style={styles.condition}>{weather.condition}</Text>
-              </View>
+        <View style={styles.temperatureSection}>
+          <Text style={styles.temperature}>{todayWeather.temperature}°F</Text>
+          <View style={styles.weatherDetails}>
+            <View style={styles.detailItem}>
+              <Feather name="wind" size={18} color="#1B5E20" />
+              <Text style={styles.detailText}>{todayWeather.windSpeed} mph</Text>
             </View>
-
-            <View style={styles.detailsGrid}>
-              <View style={styles.detailBox}>
-                <Feather name="wind" size={20} color="#004E89" />
-                <Text style={styles.detailLabel}>Wind</Text>
-                <Text style={styles.detailValue}>{weather.windSpeed} mph {weather.windDirection}</Text>
-              </View>
-              <View style={styles.detailBox}>
-                <Feather name="droplets" size={20} color="#004E89" />
-                <Text style={styles.detailLabel}>Humidity</Text>
-                <Text style={styles.detailValue}>{weather.humidity}%</Text>
-              </View>
-              <View style={styles.detailBox}>
-                <Feather name="gauge" size={20} color="#004E89" />
-                <Text style={styles.detailLabel}>Pressure</Text>
-                <Text style={styles.detailValue}>{weather.pressure} mb</Text>
-              </View>
-              <View style={styles.detailBox}>
-                <Feather name="sun" size={20} color="#004E89" />
-                <Text style={styles.detailLabel}>UV Index</Text>
-                <Text style={styles.detailValue}>{weather.uvIndex}</Text>
-              </View>
-            </View>
-
-            <View style={styles.fishingCondition}>
-              <View style={styles.fishingHeader}>
-                <Feather name="check-circle" size={24} color="#4CAF50" />
-                <Text style={styles.fishingStatus}>{weather.fishingCondition}</Text>
-              </View>
-              <Text style={styles.recommendation}>{weather.recommendation}</Text>
+            <View style={styles.detailItem}>
+              <Feather name="droplets" size={18} color="#1B5E20" />
+              <Text style={styles.detailText}>{todayWeather.humidity}%</Text>
             </View>
           </View>
+        </View>
 
-          <View style={styles.forecast}>
-            <Text style={styles.forecastTitle}>5-Day Forecast</Text>
-            {weather.forecast.map((day, idx) => (
-              <View key={idx} style={styles.forecastCard}>
-                <Text style={styles.forecastDay}>{day.day}</Text>
-                <Text style={styles.forecastCondition}>{day.condition}</Text>
-                <Text style={styles.forecastTemp}>{day.high}° / {day.low}°</Text>
-                <Text style={styles.forecastWind}>💨 {day.windSpeed} mph</Text>
-              </View>
-            ))}
+        <View style={[styles.fishingBadge, { backgroundColor: getFishingColor(todayWeather.fishingCondition) }]}>
+          <Text style={styles.fishingEmoji}>🎣</Text>
+          <View style={styles.fishingBadgeText}>
+            <Text style={styles.fishingLabel}>Fishing: {todayWeather.fishingCondition}</Text>
           </View>
-        </>
-      )}
-    </ScrollView>
+        </View>
+      </View>
+
+      {/* Next 3 Days - Compact */}
+      <View style={styles.forecastRibbon}>
+        {forecast.map((day, idx) => (
+          <View key={idx} style={styles.dayCard}>
+            <Text style={styles.dayEmoji}>{day.emoji}</Text>
+            <Text style={styles.dayName}>{day.day}</Text>
+            <Text style={styles.dayTemp}>{day.high}°/{day.low}°</Text>
+            <Text style={styles.dayWind}>💨 {day.windSpeed}mph</Text>
+            <Text style={styles.dayRating}>{day.rating}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F5F1E8',
+    paddingVertical: 16,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  currentWeather: {
-    backgroundColor: '#fff',
-    padding: 16,
-    margin: 12,
+  todayContainer: {
+    backgroundColor: '#1B5E20',
+    marginHorizontal: 12,
+    marginBottom: 12,
     borderRadius: 12,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
   },
-  locationHeader: {
+  todayTop: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  location: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 8,
+  emoji: {
+    fontSize: 48,
+    marginRight: 12,
   },
-  temperatureDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  tempInfo: {
-    marginLeft: 16,
-  },
-  temperature: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#004E89',
+  todayInfo: {
+    flex: 1,
   },
   condition: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
-  },
-  detailsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  detailBox: {
-    width: '48%',
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    alignItems: 'center',
-  },
-  detailLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  detailValue: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
+  },
+  location: {
+    fontSize: 14,
+    color: '#E8F5E9',
     marginTop: 2,
   },
-  fishingCondition: {
-    backgroundColor: '#f0f7ff',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
+  temperatureSection: {
+    marginBottom: 16,
   },
-  fishingHeader: {
+  temperature: {
+    fontSize: 56,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  weatherDetails: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 24,
+  },
+  detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 6,
   },
-  fishingStatus: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-    marginLeft: 8,
+  detailText: {
+    fontSize: 14,
+    color: '#E8F5E9',
+    fontWeight: '600',
   },
-  recommendation: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-  },
-  forecast: {
-    padding: 16,
-  },
-  forecastTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  forecastCard: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+  fishingBadge: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  fishingEmoji: {
+    fontSize: 20,
+  },
+  fishingBadgeText: {
+    justifyContent: 'center',
+  },
+  fishingLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  forecastRibbon: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    gap: 10,
+  },
+  dayCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
-    shadowRadius: 2,
+    shadowRadius: 3,
     elevation: 2,
+    borderLeftWidth: 3,
+    borderLeftColor: '#2E7D32',
   },
-  forecastDay: {
-    fontSize: 13,
+  dayEmoji: {
+    fontSize: 32,
+    marginBottom: 6,
+  },
+  dayName: {
+    fontSize: 12,
     fontWeight: 'bold',
-    color: '#333',
-    minWidth: 60,
+    color: '#1B5E20',
+    marginBottom: 4,
   },
-  forecastCondition: {
-    fontSize: 12,
-    color: '#666',
-    flex: 1,
-    marginLeft: 8,
-  },
-  forecastTemp: {
-    fontSize: 13,
+  dayTemp: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#004E89',
-    minWidth: 60,
+    color: '#1B5E20',
+    marginBottom: 4,
   },
-  forecastWind: {
-    fontSize: 12,
+  dayWind: {
+    fontSize: 11,
     color: '#666',
-    minWidth: 50,
+    marginBottom: 6,
+  },
+  dayRating: {
+    fontSize: 12,
   },
 });

@@ -7,7 +7,7 @@ export default function SuppliesScreen() {
   const [selectedSupply, setSelectedSupply] = useState(null);
   const [filterCategory, setFilterCategory] = useState('All');
 
-  const categories = ['All', 'Reels', 'Rods', 'Lures', 'Lures & Tackle', 'Bait & Plastic', 'Tackle Organization', 'Resources', 'License'];
+  const categories = ['All', 'Rods', 'Reels', 'Fishing Line', 'Lures & Bait', 'Tackle Organization', 'Clothing'];
 
   const filteredSupplies = filterCategory === 'All' 
     ? wisconsinSupplies 
@@ -65,7 +65,7 @@ export default function SuppliesScreen() {
           {selectedSupply?.id === supply.id && (
             <View style={styles.expandedContent}>
               <View style={styles.wisconsinBadge}>
-                <Feather name="award" size={16} color="#4CAF50" />
+                <Feather name="award" size={16} color="#1B5E20" />
                 <Text style={styles.wisconsinText}>{supply.wisconsinConnection}</Text>
               </View>
 
@@ -95,7 +95,7 @@ export default function SuppliesScreen() {
       ))}
 
       <View style={styles.supportWisconsin}>
-        <Feather name="heart" size={24} color="#F44336" />
+        <Feather name="heart" size={24} color="#E65100" />
         <View style={styles.supportText}>
           <Text style={styles.supportTitle}>Support Wisconsin</Text>
           <Text style={styles.supportDescription}>
@@ -105,7 +105,7 @@ export default function SuppliesScreen() {
       </View>
 
       <View style={styles.licenseReminder}>
-        <Feather name="alert-circle" size={20} color="#2196F3" />
+        <Feather name="alert-circle" size={20} color="#01579B" />
         <View style={styles.licenseText}>
           <Text style={styles.licenseTitle}>Don't Forget Your License!</Text>
           <Text style={styles.licenseDescription}>
@@ -120,12 +120,14 @@ export default function SuppliesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F5F1E8',
   },
   header: {
     padding: 16,
-    backgroundColor: '#004E89',
+    backgroundColor: '#1B5E20',
     paddingVertical: 24,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   headerTitle: {
     fontSize: 24,
@@ -134,7 +136,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#e0e0e0',
+    color: '#E8F5E9',
     marginTop: 4,
   },
   categoryScroll: {
@@ -147,16 +149,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E8F5E9',
     marginRight: 8,
   },
   categoryButtonActive: {
-    backgroundColor: '#004E89',
+    backgroundColor: '#1B5E20',
   },
   categoryButtonText: {
     fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
+    color: '#1B5E20',
+    fontWeight: '600',
   },
   categoryButtonTextActive: {
     color: '#fff',
@@ -165,18 +167,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: 12,
     marginVertical: 8,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 10,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2E7D32',
   },
   supplyCardActive: {
-    borderColor: '#004E89',
-    borderWidth: 2,
-    backgroundColor: '#f0f7ff',
+    backgroundColor: '#F0F7F0',
+    borderLeftColor: '#1B5E20',
   },
   supplyHeader: {
     flexDirection: 'row',
@@ -188,7 +191,7 @@ const styles = StyleSheet.create({
   supplyName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1B5E20',
   },
   supplyBrand: {
     fontSize: 13,
@@ -212,29 +215,31 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#004E89',
+    color: '#1B5E20',
     textAlign: 'right',
   },
   expandedContent: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#E8F5E9',
   },
   wisconsinBadge: {
     flexDirection: 'row',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#E8F5E9',
     padding: 10,
-    borderRadius: 6,
+    borderRadius: 8,
     marginBottom: 12,
     alignItems: 'flex-start',
+    borderLeftWidth: 3,
+    borderLeftColor: '#2E7D32',
   },
   wisconsinText: {
     fontSize: 12,
-    color: '#2e7d32',
+    color: '#1B5E20',
     marginLeft: 8,
     flex: 1,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   fishContainerSection: {
     marginBottom: 12,
@@ -242,7 +247,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#666',
+    color: '#1B5E20',
     marginBottom: 8,
   },
   fishContainer: {
@@ -250,10 +255,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   fishBadge: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#004E89',
+    backgroundColor: '#E8F5E9',
+    borderColor: '#2E7D32',
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginRight: 8,
@@ -261,16 +266,16 @@ const styles = StyleSheet.create({
   },
   fishBadgeText: {
     fontSize: 11,
-    color: '#004E89',
-    fontWeight: '500',
+    color: '#1B5E20',
+    fontWeight: '600',
   },
   visitButton: {
-    backgroundColor: '#004E89',
+    backgroundColor: '#1B5E20',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 6,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
   visitButtonText: {
     color: '#fff',
@@ -280,12 +285,12 @@ const styles = StyleSheet.create({
   },
   supportWisconsin: {
     flexDirection: 'row',
-    backgroundColor: '#ffebee',
+    backgroundColor: '#fff3e0',
     margin: 12,
     padding: 12,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#F44336',
+    borderLeftColor: '#E65100',
     alignItems: 'flex-start',
   },
   supportText: {
@@ -295,7 +300,7 @@ const styles = StyleSheet.create({
   supportTitle: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#C62828',
+    color: '#E65100',
     marginBottom: 4,
   },
   supportDescription: {
@@ -305,13 +310,13 @@ const styles = StyleSheet.create({
   },
   licenseReminder: {
     flexDirection: 'row',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#E8F5E9',
     margin: 12,
     marginBottom: 24,
     padding: 12,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
+    borderLeftColor: '#01579B',
     alignItems: 'flex-start',
   },
   licenseText: {
@@ -321,7 +326,7 @@ const styles = StyleSheet.create({
   licenseTitle: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#1565C0',
+    color: '#01579B',
     marginBottom: 4,
   },
   licenseDescription: {

@@ -1,80 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { seasonalFish, getCurrentInSeasonFish } from '../data/seasonalData';
+import { getCurrentInSeasonFish, getSeasonColor } from '../data/seasonalData';
 
 export default function SeasonalScreen() {
   const [inSeasonFish, setInSeasonFish] = useState([]);
   const [expandedFish, setExpandedFish] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Get current in-season fish for Wisconsin
-    const currentSeason = getCurrentInSeasonFish();
-    setInSeasonFish(currentSeason.length > 0 ? currentSeason : Object.entries(seasonalFish).map(([fish, data]) => ({ fish, ...data })));
+    // Get all fish with season status
+    const allFish = getCurrentInSeasonFish();
+    setInSeasonFish(allFish);
     setLoading(false);
   }, []);
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#004E89" />
+        <ActivityIndicator size="large" color="#1B5E20" />
       </View>
     );
   }
 
-  const getSeasonColor = (season) => {
-    if (season.includes('Spring')) return '#4CAF50';
-    if (season.includes('Summer')) return '#FF9800';
-    if (season.includes('Fall')) return '#F44336';
-    if (season.includes('Winter')) return '#2196F3';
-    return '#004E89';
+  const getSeasonStatusLabel = (status) => {
+    if (status === 2) return 'IN SEASON';
+    if (status === 1) return 'COMING SOON';
+    return 'OFF SEASON';
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'Easy':
-        return '#4CAF50';
-      case 'Intermediate':
-        return '#FF9800';
-      case 'Hard':
-        return '#F44336';
-      default:
-        return '#004E89';
-    }
+  const getSeasonStatusColor = (status) => {
+    if (status === 2) return '#2E7D32'; // Green
+    if (status === 1) return '#E65100'; // Orange
+    return '#C62828'; // Red
   };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>In Season Fish</Text>
-        <Text style={styles.headerSubtitle}>Current fishing opportunities in Wisconsin</Text>
+        <Text style={styles.headerTitle}>Wisconsin Fish Seasons</Text>
+        <Text style={styles.headerSubtitle}>Check what's biting now</Text>
+      </View>
+
+      <View style={styles.legendContainer}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: '#2E7D32' }]} />
+          <Text style={styles.legendText}>In Season</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: '#E65100' }]} />
+          <Text style={styles.legendText}>Coming Soon</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: '#C62828' }]} />
+          <Text style={styles.legendText}>Off Season</Text>
+        </View>
       </View>
 
       {inSeasonFish.length > 0 ? (
         inSeasonFish.map((item, idx) => (
           <TouchableOpacity
             key={idx}
-            style={[styles.fishCard, expandedFish === idx && styles.fishCardActive]}
+            style={[
+              styles.fishCard,
+              expandedFish === idx && styles.fishCardActive,
+              { borderLeftColor: item.colorStatus }
+            ]}
             onPress={() => setExpandedFish(expandedFish === idx ? null : idx)}
           >
             <View style={styles.fishHeader}>
               <View style={styles.fishNameContainer}>
                 <Text style={styles.fishName}>{item.fish}</Text>
-                <Text style={[styles.season, { color: getSeasonColor(item.season) }]}>
-                  {item.season}
-                </Text>
+                <View style={styles.statusBadge}>
+                  <View style={[styles.statusDot, { backgroundColor: item.colorStatus }]} />
+                  <Text style={[styles.statusLabel, { color: item.colorStatus }]}>
+                    {getSeasonStatusLabel(item.seasonStatus)}
+                  </Text>
+                </View>
               </View>
-              <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(item.difficulty) }]}>
+              <View style={[styles.difficultyBadge, { backgroundColor: item.colorStatus }]}>
                 <Text style={styles.difficultyText}>{item.difficulty}</Text>
               </View>
             </View>
 
             {expandedFish === idx && (
               <View style={styles.expandedContent}>
+                {item.image && (
+                  <Image
+                    source={{ uri: item.image }}
+                    style={styles.fishImage}
+                    onError={() => console.log('Image failed to load')}
+                  />
+                )}
+
                 <View style={styles.detailRow}>
                   <Text style={styles.label}>Peak Months:</Text>
-                  <Text style={styles.value}>{item.peak.join(', ')}</Text>
+                  <Text style={styles.value}>{item.peakMonths.map(m => {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return months[m - 1];
+                  }).join(', ')}</Text>
                 </View>
 
                 <View style={styles.detailRow}>
@@ -83,14 +107,39 @@ export default function SeasonalScreen() {
                 </View>
 
                 <View style={styles.detailRow}>
+                  <Text style={styles.label}>Average Size:</Text>
+                  <Text style={styles.value}>{item.avgSize}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Text style={styles.label}>Record Size:</Text>
+                  <Text style={styles.value}>{item.recordSize}</Text>
+                </View>
+
+                {item.recommendedGear && item.recommendedGear.length > 0 && (
+                  <View style={styles.gearSection}>
+                    <Text style={styles.gearTitle}>🎣 Recommended Gear:</Text>
+                    <View style={styles.gearList}>
+                      {item.recommendedGear.map((gear, gIdx) => (
+                        <View key={gIdx} style={styles.gearTag}>
+                          <Text style={styles.gearTagText}>{gear}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.detailRow}>
                   <Text style={styles.label}>Tips:</Text>
                   <Text style={styles.value}>{item.tips}</Text>
                 </View>
 
-                <View style={styles.seasonInfo}>
-                  <Feather name="info" size={16} color="#004E89" />
-                  <Text style={styles.seasonInfoText}>
-                    This is a great time to target {item.fish} in Wisconsin waters!
+                <View style={[styles.seasonInfo, { borderLeftColor: item.colorStatus }]}>
+                  <Feather name="info" size={16} color={item.colorStatus} />
+                  <Text style={[styles.seasonInfoText, { color: item.colorStatus }]}>
+                    {item.seasonStatus === 2 && `${item.fish} is in season! Great time to fish!`}
+                    {item.seasonStatus === 1 && `${item.fish} season is coming soon!`}
+                    {item.seasonStatus === 0 && `${item.fish} is currently out of season.`}
                   </Text>
                 </View>
               </View>
@@ -100,7 +149,7 @@ export default function SeasonalScreen() {
       ) : (
         <View style={styles.emptyContainer}>
           <Feather name="calendar" size={48} color="#ccc" />
-          <Text style={styles.emptyText}>No fish currently in peak season</Text>
+          <Text style={styles.emptyText}>No fish data available</Text>
         </View>
       )}
 
@@ -120,18 +169,20 @@ export default function SeasonalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F5F1E8',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F5F1E8',
   },
   header: {
     padding: 16,
-    backgroundColor: '#004E89',
+    backgroundColor: '#1B5E20',
     paddingVertical: 24,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   headerTitle: {
     fontSize: 24,
@@ -140,25 +191,47 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#e0e0e0',
+    color: '#E8F5E9',
     marginTop: 4,
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    justifyContent: 'space-around',
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    fontSize: 11,
+    color: '#666',
+    fontWeight: '600',
   },
   fishCard: {
     backgroundColor: '#fff',
     marginHorizontal: 12,
     marginVertical: 8,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 10,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderLeftWidth: 4,
   },
   fishCardActive: {
-    borderColor: '#004E89',
-    borderWidth: 2,
-    backgroundColor: '#f0f7ff',
+    backgroundColor: '#F0F7F0',
   },
   fishHeader: {
     flexDirection: 'row',
@@ -171,17 +244,29 @@ const styles = StyleSheet.create({
   fishName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1B5E20',
   },
-  season: {
-    fontSize: 12,
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 4,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusLabel: {
+    fontSize: 10,
     fontWeight: 'bold',
-    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   difficultyBadge: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   difficultyText: {
     color: '#fff',
@@ -192,16 +277,56 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#E8F5E9',
+  },
+  fishImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#E8F5E9',
+  },
+  gearSection: {
+    marginVertical: 12,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E8F5E9',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8F5E9',
+  },
+  gearTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#1B5E20',
+    marginBottom: 8,
+  },
+  gearList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  gearTag: {
+    backgroundColor: '#fff3e0',
+    borderColor: '#E65100',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  gearTagText: {
+    fontSize: 12,
+    color: '#E65100',
+    fontWeight: '600',
   },
   detailRow: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   label: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 2,
+    color: '#1B5E20',
+    marginBottom: 3,
   },
   value: {
     fontSize: 13,
@@ -210,17 +335,19 @@ const styles = StyleSheet.create({
   },
   seasonInfo: {
     flexDirection: 'row',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#F0F7F0',
     padding: 10,
-    borderRadius: 6,
-    marginTop: 8,
+    borderRadius: 8,
+    marginTop: 10,
     alignItems: 'flex-start',
+    borderLeftWidth: 3,
+    gap: 8,
   },
   seasonInfoText: {
     fontSize: 12,
-    color: '#004E89',
-    marginLeft: 8,
     flex: 1,
+    fontWeight: '500',
+    lineHeight: 16,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -239,7 +366,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9800',
+    borderLeftColor: '#E65100',
   },
   infoContent: {
     flex: 1,
