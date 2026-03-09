@@ -1,5 +1,7 @@
 # Wisconsin Fishing App
 
+> ⚠️ **BETA VERSION** - This app is currently in beta testing. Features and functionality may change.
+
 A comprehensive React Native Android app designed for the Galaxy Flip 3, providing Wisconsin anglers with real-time fishing information, weather tracking, seasonal fish data, and Wisconsin-based supply recommendations.
 
 ## Features
