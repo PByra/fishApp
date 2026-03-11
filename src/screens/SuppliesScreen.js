@@ -1,117 +1,256 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  Linking, Alert, TextInput
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { wisconsinSupplies } from '../data/wisconsinSupplies';
 import { colors, spacing, shadows, typography } from '../theme/colors';
+import { loadMyGear, addGearItem, deleteGearItem } from '../services/gearStorage';
+
+const SUPPLY_CATS = ['All', 'Rods', 'Reels', 'Fishing Line', 'Lures & Bait', 'Tackle Organization', 'Clothing'];
+
+const GEAR_TAGS = ['Rod', 'Reel', 'Line', 'Lure', 'Bait', 'Terminal Tackle', 'Net', 'Electronics', 'Clothing', 'Other'];
+
+const TAG_STYLE = {
+  Rod:              { bg: '#E8F5E9', text: '#2E7D32', border: '#A5D6A7' },
+  Reel:             { bg: '#E3F2FD', text: '#1565C0', border: '#90CAF9' },
+  Line:             { bg: '#F3E5F5', text: '#6A1B9A', border: '#CE93D8' },
+  Lure:             { bg: '#FFF3E0', text: '#E65100', border: '#FFCC80' },
+  Bait:             { bg: '#FCE4EC', text: '#B71C1C', border: '#F48FB1' },
+  'Terminal Tackle':{ bg: '#E0F7FA', text: '#006064', border: '#80DEEA' },
+  Net:              { bg: '#F9FBE7', text: '#558B2F', border: '#C5E1A5' },
+  Electronics:      { bg: '#E8EAF6', text: '#283593', border: '#9FA8DA' },
+  Clothing:         { bg: '#FBE9E7', text: '#BF360C', border: '#FFAB91' },
+  Other:            { bg: '#F5F5F5', text: '#424242', border: '#BDBDBD' },
+};
+
+const ts = (tag) => TAG_STYLE[tag] || TAG_STYLE.Other;
+
+const PRICE_STYLE = {
+  'Entry/Budget':    { bg: '#E8F5E9', text: '#2E7D32' },
+  'Medium':          { bg: '#E3F2FD', text: '#1565C0' },
+  'Medium/High-End': { bg: '#FFF3E0', text: '#E65100' },
+  'High-End':        { bg: '#FCE4EC', text: '#B71C1C' },
+};
+const ps = (r) => PRICE_STYLE[r] || { bg: '#F5F5F5', text: '#616161' };
 
 export default function SuppliesScreen() {
-  const [selectedSupply, setSelectedSupply] = useState(null);
-  const [filterCategory, setFilterCategory] = useState('All');
+  const [selectedId, setSelectedId] = useState(null);
+  const [category, setCategory]     = useState('All');
 
-  const categories = ['All', 'Rods', 'Reels', 'Fishing Line', 'Lures & Bait', 'Tackle Organization', 'Clothing'];
+  // My Gear state
+  const [myGear, setMyGear]         = useState([]);
+  const [inputText, setInputText]   = useState('');
+  const [selectedTag, setSelectedTag] = useState('Rod');
+  const [showTagPicker, setShowTagPicker] = useState(false);
 
-  const filteredSupplies = filterCategory === 'All' 
-    ? wisconsinSupplies 
-    : wisconsinSupplies.filter(s => s.category === filterCategory);
+  const refreshGear = useCallback(async () => setMyGear(await loadMyGear()), []);
+  useEffect(() => { refreshGear(); }, [refreshGear]);
 
-  const handleVisitLink = (url) => {
-    Linking.openURL(url).catch(() => {
-      Alert.alert('Error', 'Could not open link');
-    });
+  const handleAdd = async () => {
+    if (!inputText.trim()) return;
+    await addGearItem({ name: inputText, tag: selectedTag });
+    setInputText('');
+    await refreshGear();
   };
 
+  const handleDelete = (id) => {
+    Alert.alert('Remove Item', 'Remove this from your gear bag?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: async () => { await deleteGearItem(id); await refreshGear(); } },
+    ]);
+  };
+
+  const displayed = category === 'All'
+    ? wisconsinSupplies
+    : wisconsinSupplies.filter(s => s.category === category);
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+
+      {/* ── HEADER ──────────────────────────────────────────── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Wisconsin Fishing Supplies</Text>
-        <Text style={styles.headerSubtitle}>Quality brands and local favorites</Text>
+        <Text style={styles.headerTitle}>Fishing Gear</Text>
+        <Text style={styles.headerSub}>My Bag · Wisconsin Brands</Text>
       </View>
 
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-      >
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[styles.categoryButton, filterCategory === cat && styles.categoryButtonActive]}
-            onPress={() => setFilterCategory(cat)}
-          >
-            <Text style={[styles.categoryButtonText, filterCategory === cat && styles.categoryButtonTextActive]}>
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {filteredSupplies.map((supply) => (
-        <TouchableOpacity
-          key={supply.id}
-          style={[styles.supplyCard, selectedSupply?.id === supply.id && styles.supplyCardActive]}
-          onPress={() => setSelectedSupply(selectedSupply?.id === supply.id ? null : supply)}
-        >
-          <View style={styles.supplyHeader}>
-            <View style={styles.supplyInfo}>
-              <Text style={styles.supplyName}>{supply.name}</Text>
-              <Text style={styles.supplyBrand}>{supply.brand}</Text>
-              <View style={styles.ratingContainer}>
-                <Text style={styles.ratingStars}>★</Text>
-                <Text style={styles.rating}>{supply.rating} • {supply.category}</Text>
-              </View>
+      {/* ══════════════════════════════════════════════════════
+          MY GEAR BAG
+      ══════════════════════════════════════════════════════ */}
+      <View style={styles.bagSection}>
+        <View style={styles.bagSectionHead}>
+          <View style={styles.bagHeadLeft}>
+            <Text style={styles.bagEmoji}>🎒</Text>
+            <View>
+              <Text style={styles.bagTitle}>My Gear Bag</Text>
+              <Text style={styles.bagSub}>{myGear.length} item{myGear.length !== 1 ? 's' : ''}</Text>
             </View>
-            <Text style={styles.price}>{supply.price}</Text>
           </View>
+        </View>
 
-          {selectedSupply?.id === supply.id && (
-            <View style={styles.expandedContent}>
-              <View style={styles.wisconsinBadge}>
-                <Feather name="award" size={16} color="#1B5E20" />
-                <Text style={styles.wisconsinText}>{supply.wisconsinConnection}</Text>
-              </View>
-
-              {supply.forFish.length > 0 && (
-                <View style={styles.fishContainerSection}>
-                  <Text style={styles.sectionTitle}>Best For:</Text>
-                  <View style={styles.fishContainer}>
-                    {supply.forFish.map((fish, idx) => (
-                      <View key={idx} style={styles.fishBadge}>
-                        <Text style={styles.fishBadgeText}>{fish}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
-
-              <TouchableOpacity 
-                style={styles.visitButton}
-                onPress={() => handleVisitLink(supply.link)}
-              >
-                <Feather name="external-link" size={18} color="#fff" />
-                <Text style={styles.visitButtonText}>Visit Website</Text>
-              </TouchableOpacity>
+        {/* Add item row */}
+        <View style={styles.addRow}>
+          <TextInput
+            style={styles.addInput}
+            placeholder="e.g. St. Croix 7' Medium Rod"
+            placeholderTextColor={colors.neutral.textSecondary}
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={handleAdd}
+            returnKeyType="done"
+          />
+          <TouchableOpacity
+            style={styles.tagPickerBtn}
+            onPress={() => setShowTagPicker(!showTagPicker)}
+          >
+            <View style={[styles.tagPill, { backgroundColor: ts(selectedTag).bg, borderColor: ts(selectedTag).border }]}>
+              <Text style={[styles.tagPillText, { color: ts(selectedTag).text }]}>{selectedTag}</Text>
+              <Feather name="chevron-down" size={11} color={ts(selectedTag).text} />
             </View>
-          )}
-        </TouchableOpacity>
-      ))}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.addBtn, !inputText.trim() && styles.addBtnDisabled]}
+            onPress={handleAdd}
+            disabled={!inputText.trim()}
+          >
+            <Feather name="plus" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.supportWisconsin}>
-        <Feather name="heart" size={24} color="#E65100" />
-        <View style={styles.supportText}>
-          <Text style={styles.supportTitle}>Support Wisconsin</Text>
-          <Text style={styles.supportDescription}>
-            When possible, choose Wisconsin-based and Wisconsin-friendly fishing suppliers to support local businesses and the communities where you fish.
-          </Text>
+        {/* Tag picker */}
+        {showTagPicker && (
+          <View style={styles.tagGrid}>
+            {GEAR_TAGS.map(tag => (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.tagOption, { backgroundColor: ts(tag).bg, borderColor: ts(tag).border },
+                  selectedTag === tag && styles.tagOptionActive]}
+                onPress={() => { setSelectedTag(tag); setShowTagPicker(false); }}
+              >
+                <Text style={[styles.tagOptionText, { color: ts(tag).text }]}>{tag}</Text>
+                {selectedTag === tag && <Feather name="check" size={11} color={ts(tag).text} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Gear list */}
+        {myGear.length === 0 ? (
+          <Text style={styles.bagEmpty}>Add the gear you own above — type a name, pick a tag, hit +</Text>
+        ) : (
+          <View style={styles.gearList}>
+            {myGear.map(item => {
+              const t = ts(item.tag);
+              return (
+                <View key={item.id} style={styles.gearItem}>
+                  <View style={[styles.gearTagBadge, { backgroundColor: t.bg, borderColor: t.border }]}>
+                    <Text style={[styles.gearTagBadgeText, { color: t.text }]}>{item.tag}</Text>
+                  </View>
+                  <Text style={styles.gearItemName}>{item.name}</Text>
+                  <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.gearDeleteBtn}>
+                    <Feather name="x" size={15} color={colors.neutral.gray400} />
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+
+      {/* ══════════════════════════════════════════════════════
+          WISCONSIN BRANDS
+      ══════════════════════════════════════════════════════ */}
+      <View style={styles.brandsSection}>
+        <View style={styles.brandsSectionHead}>
+          <View style={[styles.accentBar]} />
+          <Text style={styles.brandsSectionTitle}>WISCONSIN BRANDS</Text>
+        </View>
+
+        {/* Category filter */}
+        <ScrollView
+          horizontal showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: spacing.md }}
+          contentContainerStyle={styles.catRow}
+        >
+          {SUPPLY_CATS.map(cat => (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.catBtn, category === cat && styles.catBtnActive]}
+              onPress={() => setCategory(cat)}
+            >
+              <Text style={[styles.catBtnText, category === cat && styles.catBtnTextActive]}>{cat}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Cards */}
+        <View style={styles.cardList}>
+          {displayed.map(supply => {
+            const open = selectedId === supply.id;
+            const p    = ps(supply.priceRange);
+            return (
+              <View key={supply.id} style={styles.card}>
+                <TouchableOpacity
+                  style={styles.cardTop}
+                  onPress={() => setSelectedId(open ? null : supply.id)}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.cardName}>{supply.name}</Text>
+                    <Text style={styles.cardBrand}>{supply.brand} · {supply.location}</Text>
+                    <View style={styles.cardMeta}>
+                      <Text style={styles.cardRating}>★ {supply.rating}</Text>
+                      <Text style={styles.metaDot}>·</Text>
+                      <Text style={styles.cardCat}>{supply.category}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.cardRight}>
+                    <View style={[styles.pricePill, { backgroundColor: p.bg }]}>
+                      <Text style={[styles.priceText, { color: p.text }]}>{supply.price}</Text>
+                    </View>
+                    <Feather name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.neutral.gray400} />
+                  </View>
+                </TouchableOpacity>
+
+                {open && (
+                  <View style={styles.cardBody}>
+                    <View style={styles.wiRow}>
+                      <Feather name="award" size={14} color={colors.primary.forest} />
+                      <Text style={styles.wiText}>{supply.wisconsinConnection}</Text>
+                    </View>
+                    {supply.forFish?.length > 0 && (
+                      <View>
+                        <Text style={styles.expandLabel}>BEST FOR</Text>
+                        <View style={styles.forFishWrap}>
+                          {supply.forFish.map((f, i) => (
+                            <View key={i} style={styles.forFishChip}>
+                              <Text style={styles.forFishText}>{f}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      style={styles.linkBtn}
+                      onPress={() => Linking.openURL(supply.link).catch(() => Alert.alert('Error', 'Could not open link'))}
+                    >
+                      <Feather name="external-link" size={15} color="#fff" />
+                      <Text style={styles.linkBtnText}>Visit Website</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </View>
       </View>
 
-      <View style={styles.licenseReminder}>
-        <Feather name="alert-circle" size={20} color="#01579B" />
-        <View style={styles.licenseText}>
-          <Text style={styles.licenseTitle}>Don't Forget Your License!</Text>
-          <Text style={styles.licenseDescription}>
-            A Wisconsin fishing license is required for all anglers. Get yours today from the DNR.
-          </Text>
+      {/* Footer */}
+      <View style={styles.footer}>
+        <View style={styles.footerCard}>
+          <Feather name="heart" size={16} color={colors.accent.persimmon} />
+          <Text style={styles.footerText}>Support Wisconsin brands — keeps money in the communities where you fish.</Text>
         </View>
       </View>
     </ScrollView>
@@ -119,241 +258,300 @@ export default function SuppliesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.neutral.lightGray,
-  },
+  container: { flex: 1, backgroundColor: '#EDEBE4' },
+
   header: {
-    padding: spacing.lg,
     backgroundColor: colors.primary.forest,
-    paddingVertical: spacing.xl,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   headerTitle: {
     fontSize: typography.heading.fontSize,
-    fontWeight: '700',
-    color: colors.neutral.white,
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.3,
   },
-  headerSubtitle: {
-    fontSize: typography.body.fontSize,
+  headerSub: {
+    fontSize: typography.caption.fontSize,
     color: colors.accent.wasabi,
-    marginTop: spacing.xs,
-    fontWeight: '500',
+    fontWeight: '600',
+    marginTop: 3,
   },
-  categoryScroll: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.neutral.white,
+
+  // ── MY GEAR BAG ────────────────────────────────────────
+  bagSection: {
+    backgroundColor: '#fff',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: 20,
+    padding: spacing.md,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent.wasabi,
+    ...shadows.md,
+  },
+  bagSectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: spacing.md,
   },
-  categoryButton: {
+  bagHeadLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  bagEmoji: { fontSize: 30 },
+  bagTitle: {
+    fontSize: typography.subheading.fontSize,
+    fontWeight: '800',
+    color: colors.primary.forest,
+    marginBottom: 2,
+  },
+  bagSub: {
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '500',
+  },
+
+  // Add row
+  addRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  addInput: {
+    flex: 1,
+    backgroundColor: '#F5F8F5',
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    fontSize: typography.body.fontSize,
+    color: colors.primary.forest,
+    borderWidth: 1,
+    borderColor: colors.neutral.borderLight,
+  },
+  tagPickerBtn: {},
+  tagPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 7,
+  },
+  tagPillText: { fontSize: 12, fontWeight: '700' },
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.primary.forest,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.sm,
+  },
+  addBtnDisabled: { backgroundColor: colors.neutral.gray300 },
+
+  // Tag picker grid
+  tagGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+    paddingTop: spacing.xs,
+  },
+  tagOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  tagOptionActive: { opacity: 1 },
+  tagOptionText: { fontSize: 12, fontWeight: '700' },
+
+  // Gear list
+  bagEmpty: {
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    fontStyle: 'italic',
+    fontWeight: '500',
+    textAlign: 'center',
+    paddingVertical: spacing.md,
+  },
+  gearList: { gap: spacing.xs, marginTop: spacing.xs },
+  gearItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0EDE6',
+  },
+  gearTagBadge: {
+    borderWidth: 1,
+    borderRadius: 7,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  gearTagBadgeText: { fontSize: 10, fontWeight: '800' },
+  gearItemName: {
+    flex: 1,
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+    color: colors.primary.forest,
+  },
+  gearDeleteBtn: { padding: 4 },
+
+  // ── WISCONSIN BRANDS ───────────────────────────────────
+  brandsSection: { marginTop: spacing.lg, paddingHorizontal: spacing.md },
+  brandsSectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  accentBar: {
+    width: 4,
+    height: 18,
+    borderRadius: 2,
+    backgroundColor: colors.accent.persimmon,
+  },
+  brandsSectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.primary.forest,
+    letterSpacing: 1,
+  },
+
+  catRow: { gap: spacing.sm, paddingBottom: spacing.xs },
+  catBtn: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 20,
-    backgroundColor: 'rgba(168, 198, 159, 0.15)',
-    marginRight: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.accent.wasabi,
-    minHeight: 40,
-    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: colors.neutral.borderLight,
+  },
+  catBtnActive: { backgroundColor: colors.primary.forest, borderColor: colors.primary.forest },
+  catBtnText: { fontSize: 13, fontWeight: '700', color: colors.primary.forest },
+  catBtnTextActive: { color: '#fff' },
+
+  cardList: { gap: spacing.md, paddingBottom: 0 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    overflow: 'hidden',
+    ...shadows.sm,
+    borderWidth: 1.5,
+    borderColor: colors.neutral.borderLight,
+  },
+  cardTop: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  categoryButtonActive: {
-    backgroundColor: colors.primary.forest,
-    borderColor: colors.primary.forest,
-  },
-  categoryButtonText: {
-    fontSize: typography.caption.fontSize,
-    color: colors.primary.forest,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  categoryButtonTextActive: {
-    color: colors.neutral.white,
-  },
-  supplyCard: {
-    backgroundColor: colors.neutral.white,
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.md,
-    borderRadius: 24,
     padding: spacing.md,
-    ...shadows.md,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.accent.wasabi,
-    minHeight: 56,
+    gap: spacing.md,
   },
-  supplyCardActive: {
-    backgroundColor: '#f9f8f6',
-    borderLeftColor: colors.accent.persimmon,
-  },
-  supplyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  supplyInfo: {
-    flex: 1,
-  },
-  supplyName: {
+  cardInfo: { flex: 1 },
+  cardName: {
     fontSize: typography.body.fontSize,
     fontWeight: '700',
     color: colors.primary.forest,
-    letterSpacing: 0.3,
+    marginBottom: 3,
   },
-  supplyBrand: {
-    fontSize: typography.caption.fontSize,
-    color: colors.neutral.textSecondary,
-    marginTop: spacing.xs,
-    fontWeight: '500',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  ratingStars: {
-    fontSize: 14,
-    color: '#FFB300',
-    marginRight: spacing.xs,
-  },
-  rating: {
+  cardBrand: {
     fontSize: typography.caption.fontSize,
     color: colors.neutral.textSecondary,
     fontWeight: '500',
+    marginBottom: 4,
   },
-  price: {
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-    color: colors.accent.persimmon,
-    textAlign: 'right',
-  },
-  expandedContent: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
+  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  cardRating: { fontSize: 12, color: '#F9A825', fontWeight: '700' },
+  metaDot: { fontSize: 12, color: colors.neutral.gray300 },
+  cardCat: { fontSize: 12, color: colors.neutral.textSecondary, fontWeight: '500' },
+  cardRight: { alignItems: 'center', gap: spacing.sm },
+  pricePill: { borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 4 },
+  priceText: { fontSize: 11, fontWeight: '700' },
+
+  cardBody: {
+    padding: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.neutral.borderLight,
+    gap: spacing.md,
   },
-  wisconsinBadge: {
+  wiRow: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(168, 198, 159, 0.1)',
+    gap: spacing.sm,
+    backgroundColor: '#F0F7F4',
+    borderRadius: 10,
     padding: spacing.md,
-    borderRadius: 12,
-    marginBottom: spacing.md,
     alignItems: 'flex-start',
     borderLeftWidth: 3,
     borderLeftColor: colors.accent.wasabi,
   },
-  wisconsinText: {
-    fontSize: typography.caption.fontSize,
-    color: colors.primary.forest,
-    marginLeft: spacing.md,
+  wiText: {
     flex: 1,
-    fontWeight: '600',
-  },
-  fishContainerSection: {
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: typography.caption.fontSize,
-    fontWeight: '700',
-    color: colors.neutral.textSecondary,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  fishContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  fishBadge: {
-    backgroundColor: '#F9F8F6',
-    borderColor: colors.accent.wasabi,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  fishBadgeText: {
     fontSize: typography.caption.fontSize,
     color: colors.primary.forest,
     fontWeight: '600',
-    letterSpacing: 0.2,
+    lineHeight: 17,
   },
-  visitButton: {
-    backgroundColor: colors.accent.persimmon,
+  expandLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.neutral.textSecondary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
+  },
+  forFishWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  forFishChip: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  forFishText: { fontSize: 12, fontWeight: '600', color: '#2E7D32' },
+  linkBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: colors.accent.persimmon,
     borderRadius: 12,
-    marginTop: spacing.md,
-    minHeight: 48,
+    paddingVertical: spacing.md,
+    ...shadows.sm,
   },
-  visitButtonText: {
-    color: colors.neutral.white,
+  linkBtnText: {
     fontSize: typography.body.fontSize,
     fontWeight: '700',
-    marginLeft: spacing.sm,
+    color: '#fff',
     letterSpacing: 0.3,
   },
-  supportWisconsin: {
+
+  footer: { padding: spacing.md, paddingBottom: spacing.xl },
+  footerCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFF5F2',
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.lg,
+    gap: spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: spacing.md,
-    borderRadius: 16,
-    borderLeftWidth: 4,
+    alignItems: 'flex-start',
+    borderLeftWidth: 3,
     borderLeftColor: colors.accent.persimmon,
-    alignItems: 'flex-start',
     ...shadows.sm,
   },
-  supportText: {
+  footerText: {
     flex: 1,
-    marginLeft: spacing.md,
-  },
-  supportTitle: {
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-    color: colors.accent.persimmon,
-    marginBottom: spacing.xs,
-    letterSpacing: 0.2,
-  },
-  supportDescription: {
     fontSize: typography.caption.fontSize,
     color: colors.neutral.textSecondary,
-    lineHeight: 16,
     fontWeight: '500',
-  },
-  licenseReminder: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(168, 198, 159, 0.1)',
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.xl,
-    padding: spacing.md,
-    borderRadius: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.accent.wasabi,
-    alignItems: 'flex-start',
-    ...shadows.sm,
-  },
-  licenseText: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  licenseTitle: {
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-    color: colors.accent.wasabi,
-    marginBottom: spacing.xs,
-    letterSpacing: 0.2,
-  },
-  licenseDescription: {
-    fontSize: typography.caption.fontSize,
-    color: colors.neutral.textSecondary,
-    lineHeight: 16,
-    fontWeight: '500',
+    lineHeight: 17,
   },
 });

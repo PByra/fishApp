@@ -3,58 +3,52 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import HomeScreen from './src/screens/HomeScreen';
-import MapScreen from './src/screens/MapScreen';
 import WeatherScreen from './src/screens/WeatherScreen';
 import SeasonalScreen from './src/screens/SeasonalScreen';
 import SuppliesScreen from './src/screens/SuppliesScreen';
 import SearchNavigateScreen from './src/screens/SearchNavigateScreen';
+import JournalScreen from './src/screens/JournalScreen';
 
 const Tab = createBottomTabNavigator();
+
+const TAB_ICONS = {
+  Home: 'home',
+  Search: 'search',
+  Seasonal: 'calendar',
+  Weather: 'cloud',
+  Supplies: 'shopping-cart',
+  Journal: 'book-open',
+};
 
 export default function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
-            if (route.name === 'Home') {
-              iconName = focused ? 'home' : 'home';
-            } else if (route.name === 'Map') {
-              iconName = focused ? 'map' : 'map';
-            } else if (route.name === 'Search') {
-              iconName = focused ? 'search' : 'search';
-            } else if (route.name === 'Weather') {
-              iconName = focused ? 'cloud' : 'cloud';
-            } else if (route.name === 'Seasonal') {
-              iconName = focused ? 'calendar' : 'calendar';
-            } else if (route.name === 'Supplies') {
-              iconName = focused ? 'shopping-cart' : 'shopping-cart';
-            }
-            return <Feather name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: '#1B5E20',
-          tabBarInactiveTintColor: '#999',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name={TAB_ICONS[route.name] || 'circle'} size={size} color={color} />
+          ),
+          tabBarActiveTintColor: '#3B4B48',
+          tabBarInactiveTintColor: '#9E9E9E',
           tabBarStyle: {
             backgroundColor: '#F5F1E8',
             borderTopColor: '#E0D7CE',
+            height: 60,
+            paddingBottom: 8,
           },
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: '#1B5E20',
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: '600',
           },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
+          headerShown: false,
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Wisconsin Fishing' }} />
-        <Tab.Screen name="Search" component={SearchNavigateScreen} options={{ title: 'Search & Fish' }} />
-        <Tab.Screen name="Map" component={MapScreen} options={{ title: 'Fish Map' }} />
-        <Tab.Screen name="Weather" component={WeatherScreen} options={{ title: 'Forecast' }} />
-        <Tab.Screen name="Seasonal" component={SeasonalScreen} options={{ title: 'In Season' }} />
-        <Tab.Screen name="Supplies" component={SuppliesScreen} options={{ title: 'Gear' }} />
+        <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
+        <Tab.Screen name="Search" component={SearchNavigateScreen} options={{ tabBarLabel: 'Spots' }} />
+        <Tab.Screen name="Seasonal" component={SeasonalScreen} options={{ tabBarLabel: 'WI Fish' }} />
+        <Tab.Screen name="Journal" component={JournalScreen} options={{ tabBarLabel: 'Journal' }} />
+        <Tab.Screen name="Weather" component={WeatherScreen} options={{ tabBarLabel: 'Weather' }} />
+        <Tab.Screen name="Supplies" component={SuppliesScreen} options={{ tabBarLabel: 'Gear' }} />
       </Tab.Navigator>
     </NavigationContainer>
   );

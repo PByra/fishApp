@@ -42,6 +42,14 @@ export const colors = {
     gray500: '#757575',
     lightGray: '#F5F1E8',      // Light background
     textSecondary: '#666666',  // Secondary text
+    borderLight: '#E0D7CE',    // Light border
+  },
+
+  // Status Colors
+  status: {
+    inSeason: '#4CAF50',    // In-season fish
+    offSeason: '#9E9E9E',   // Off-season fish
+    upcoming: '#FF9800',    // Upcoming season
   },
 
   // Water & Environment
@@ -109,14 +117,76 @@ export const typography = {
     normal: 1.5,
     relaxed: 1.75,
   },
+  // Named text styles (fontSize + size both provided for compatibility)
+  heading: {
+    fontSize: 24,
+    size: 24,
+    small: 18,
+    fontWeight: '700',
+    lineHeight: 28,
+  },
+  subheading: {
+    fontSize: 18,
+    size: 18,
+    fontWeight: '600',
+    lineHeight: 22,
+  },
+  body: {
+    fontSize: 16,
+    size: 16,
+    fontWeight: '400',
+    lineHeight: 22,
+  },
+  caption: {
+    fontSize: 12,
+    size: 12,
+    fontWeight: '400',
+    lineHeight: 16,
+  },
+  button: {
+    fontSize: 16,
+    size: 16,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
 };
 
 export const shadows = {
-  sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
-  md: '0 4px 6px rgba(0, 0, 0, 0.1)',
-  lg: '0 10px 15px rgba(0, 0, 0, 0.1)',
-  xl: '0 20px 25px rgba(0, 0, 0, 0.15)',
-  elevated: '0 15px 35px rgba(0, 0, 0, 0.2)',
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  xl: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.15,
+    shadowRadius: 25,
+    elevation: 12,
+  },
+  elevated: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.2,
+    shadowRadius: 35,
+    elevation: 16,
+  },
 };
 
 export const touchTargets = {

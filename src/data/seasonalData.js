@@ -121,6 +121,105 @@ export const seasonalFish = {
     recommendedGear: ['Medium Spinning Rod', 'Drift Bobber', 'Salmon Eggs', 'Small Spinners', 'Fly Rod'],
     avgSize: '8-12 lbs',
     recordSize: '20+ lbs'
+  },
+  'Bluegill': {
+    seasonMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    peakMonths: [5, 6],
+    depth: '3-10 ft',
+    difficulty: 'Easy',
+    tips: 'Most abundant panfish in Wisconsin. Spawning beds in May-June are best. Use small hooks near weed edges.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Lepomis_macrochirus.jpg/1200px-Lepomis_macrochirus.jpg',
+    recommendedGear: ['Ultralight Spinning Rod', 'Small Hooks', 'Worms', 'Small Jigs', 'Bobber'],
+    avgSize: '0.25-0.75 lbs',
+    recordSize: '2+ lbs'
+  },
+  'Brown Trout': {
+    seasonMonths: [1, 2, 3, 4, 5, 9, 10, 11, 12],
+    peakMonths: [4, 10],
+    depth: '5-20 ft',
+    difficulty: 'Intermediate',
+    tips: 'Found in cold, clear streams and rivers. Early morning and evening feeders. Match the hatch with flies or use spinners.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Brown_trout_Salmo_trutta.jpg/1200px-Brown_trout_Salmo_trutta.jpg',
+    recommendedGear: ['Light Spinning Rod', 'Spinners', 'Fly Rod', 'Live Nightcrawlers', 'Rapala Minnow'],
+    avgSize: '1-3 lbs',
+    recordSize: '20+ lbs'
+  },
+  'Rainbow Trout': {
+    seasonMonths: [1, 2, 3, 4, 5, 9, 10, 11, 12],
+    peakMonths: [4, 10],
+    depth: '5-20 ft',
+    difficulty: 'Intermediate',
+    tips: 'Stocked in many Wisconsin lakes and streams. Active in cold water. Use bright spinners or PowerBait near stocking areas.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Rainbow_trout.png/1200px-Rainbow_trout.png',
+    recommendedGear: ['Light Spinning Rod', 'PowerBait', 'Small Spinners', 'Salmon Eggs', 'Fly Rod'],
+    avgSize: '1-3 lbs',
+    recordSize: '10+ lbs'
+  },
+  'White Bass': {
+    seasonMonths: [4, 5, 6, 7, 8, 9],
+    peakMonths: [5, 6],
+    depth: '10-25 ft',
+    difficulty: 'Easy',
+    tips: 'School fish — when you find one, you find hundreds. Follow diving birds to locate feeding schools. Great on Lake Michigan and the Fox River.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/White_bass.jpg/1200px-White_bass.jpg',
+    recommendedGear: ['Light-Medium Spinning Rod', 'Small Swimbaits', 'Curly Tail Jigs', 'Small Spoons'],
+    avgSize: '1-2 lbs',
+    recordSize: '5+ lbs'
+  },
+  'Carp': {
+    seasonMonths: [4, 5, 6, 7, 8, 9, 10],
+    peakMonths: [5, 6],
+    depth: '3-10 ft',
+    difficulty: 'Intermediate',
+    tips: 'Sight fishing in shallows during spawn. Use corn or dough bait on bottom rigs. Extremely powerful fighters on light gear.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Cyprinus_carpio.jpg/1200px-Cyprinus_carpio.jpg',
+    recommendedGear: ['Medium-Heavy Rod', 'Corn or Dough Bait', 'Hair Rig', 'Bottom Rig', 'Size 4-8 Hooks'],
+    avgSize: '5-15 lbs',
+    recordSize: '50+ lbs'
+  },
+  'Rock Bass': {
+    seasonMonths: [4, 5, 6, 7, 8, 9, 10],
+    peakMonths: [6, 7],
+    depth: '3-15 ft',
+    difficulty: 'Easy',
+    tips: 'Found in rocky areas of rivers and lakes. Very aggressive — will hit almost any small lure. Great beginner fish.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Rock_bass_1.jpg/1200px-Rock_bass_1.jpg',
+    recommendedGear: ['Light Spinning Rod', 'Small Jigs', 'Worms', 'Small Crankbaits', 'Drop Shot'],
+    avgSize: '0.5-1 lb',
+    recordSize: '2+ lbs'
+  },
+  'Freshwater Drum': {
+    seasonMonths: [5, 6, 7, 8, 9],
+    peakMonths: [6, 7],
+    depth: '10-30 ft',
+    difficulty: 'Easy',
+    tips: 'Also called sheepshead. Common and underrated. Bottom feeder in rivers and Lake Michigan. Puts up a strong fight.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Aplodinotus_grunniens.jpg/1200px-Aplodinotus_grunniens.jpg',
+    recommendedGear: ['Medium Rod', 'Bottom Rig', 'Nightcrawlers', 'Small Jigs', 'Crayfish'],
+    avgSize: '2-5 lbs',
+    recordSize: '20+ lbs'
+  },
+  'Coho Salmon': {
+    seasonMonths: [8, 9, 10],
+    peakMonths: [9, 10],
+    depth: '20-50 ft',
+    difficulty: 'Hard',
+    tips: 'Fall run into Lake Michigan tributaries Aug-Oct. Fish river mouths and piers. More acrobatic than Chinook — great fight.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Oncorhynchus_kisutch.jpg/1200px-Oncorhynchus_kisutch.jpg',
+    recommendedGear: ['Medium-Heavy Rod', 'Salmon Spoons', 'Orange/Pink Lures', 'Spawn Sacs', 'Trolling Gear'],
+    avgSize: '6-10 lbs',
+    recordSize: '25+ lbs'
+  },
+  'Tiger Musky': {
+    seasonMonths: [6, 7, 8, 9, 10],
+    peakMonths: [8, 9],
+    depth: '10-30 ft',
+    difficulty: 'Hard',
+    tips: 'Hybrid musky × pike — stocked in many WI lakes. Very aggressive, easier to catch than pure musky but equally powerful. Check DNR stocking reports.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Tiger_muskie.jpg/1200px-Tiger_muskie.jpg',
+    recommendedGear: ['Heavy Casting Rod', 'Large Bucktails', 'Jerkbaits', 'Large Soft Plastics', 'Wire Leader'],
+    avgSize: '6-12 lbs',
+    recordSize: '40+ lbs'
   }
 };
 

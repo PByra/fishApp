@@ -1,506 +1,469 @@
 import React, { useState, useMemo } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  FlatList,
-  Dimensions,
-  Platform,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { wisconsinLocations, getRegions, searchLocations } from '../data/wisconsinWaters';
+import { bodiesOfWater, getWatersByRegion, searchSpots } from '../data/wisconsinWaters';
 import { launchNavigation } from '../services/navigationService';
-import darkForestTheme from '../theme/darkForest';
+import { colors, spacing, shadows, typography } from '../theme/colors';
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
-const isFlip3 = screenHeight / screenWidth > 2; // 22:9 aspect ratio detection
+const REGIONS = ['Milwaukee', 'Mauston'];
 
-export default function SearchNavigateScreen({ navigation }) {
-  const [selectedRegion, setSelectedRegion] = useState('Milwaukee Shore');
+const DIFF = {
+  Easy:         { bg: '#E8F5E9', text: '#2E7D32', border: '#A5D6A7' },
+  Intermediate: { bg: '#FFF3E0', text: '#E65100', border: '#FFCC80' },
+  Hard:         { bg: '#FFEBEE', text: '#B71C1C', border: '#EF9A9A' },
+};
+
+const TYPE_COLORS = {
+  'Great Lake':            { bg: '#1B3A52', label: '#7EC8E3' },
+  'River':                 { bg: '#2A3A28', label: '#A8C69F' },
+  'Reservoir & River':     { bg: '#2A3A28', label: '#A8C69F' },
+  'State Park Lakes':      { bg: '#3B3020', label: '#FFCC80' },
+  'State Park – Lake Michigan & Quarry': { bg: '#1B3A52', label: '#7EC8E3' },
+};
+
+const typeStyle = (type) => TYPE_COLORS[type] || { bg: colors.primary.forest, label: colors.accent.wasabi };
+
+export default function SearchNavigateScreen() {
+  const [selectedRegion, setSelectedRegion] = useState('Milwaukee');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSpot, setActiveSpot] = useState(null);
+  const [expandedWater, setExpandedWater] = useState(null);
 
-  // Filter locations by region and search query
-  const filteredLocations = useMemo(() => {
-    let locations = wisconsinLocations.filter(
-      loc => loc.region.includes('Milwaukee') || loc.region === selectedRegion
-    );
-
-    if (selectedRegion.includes('Mauston')) {
-      locations = wisconsinLocations.filter(loc => loc.region === 'Mauston');
-    }
-
+  const displayedWaters = useMemo(() => {
     if (searchQuery.trim()) {
-      locations = searchLocations(searchQuery).filter(loc => {
-        if (selectedRegion.includes('Mauston')) {
-          return loc.region === 'Mauston';
-        }
-        return loc.region.includes('Milwaukee') || loc.region === selectedRegion;
-      });
+      const hits = searchSpots(searchQuery);
+      return bodiesOfWater
+        .map(w => ({ ...w, spots: w.spots.filter(s => hits.some(h => h.id === s.id)) }))
+        .filter(w => w.spots.length > 0);
     }
-
-    return locations;
+    return getWatersByRegion(selectedRegion);
   }, [selectedRegion, searchQuery]);
 
-  const handleNavigation = async (location) => {
-    setActiveSpot(location);
-    await launchNavigation(location.query, location.name);
-  };
-
-  const renderLocationCard = ({ item, index }) => (
-    <TouchableOpacity
-      style={[
-        styles.locationCard,
-        activeSpot?.id === item.id && styles.locationCardActive,
-        { marginRight: (index + 1) % 2 === 0 ? 0 : styles.spacing.md },
-      ]}
-      onPress={() => setActiveSpot(item)}
-      activeOpacity={0.85}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderLeft}>
-          <Text style={styles.locationName}>{item.name}</Text>
-          <Text style={styles.accessPoint}>{item.accessPoint}</Text>
-        </View>
-        <View style={[styles.difficultyBadge, getDifficultyStyle(item.difficulty)]}>
-          <Text style={styles.difficultyText}>{item.difficulty[0]}</Text>
-        </View>
-      </View>
-
-      <View style={styles.fishList}>
-        {item.fish.slice(0, 2).map((f, idx) => (
-          <View key={idx} style={styles.fishTag}>
-            <Text style={styles.fishTagText}>{f}</Text>
-          </View>
-        ))}
-        {item.fish.length > 2 && (
-          <Text style={styles.fishMore}>+{item.fish.length - 2}</Text>
-        )}
-      </View>
-
-      <TouchableOpacity
-        style={styles.goFishButton}
-        onPress={() => handleNavigation(item)}
-        activeOpacity={0.8}
-      >
-        <Feather name="navigation" size={20} color={darkForestTheme.text.primary} />
-        <Text style={styles.goFishText}>GO FISH</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
-
-  const getDifficultyStyle = (difficulty) => {
-    switch (difficulty) {
-      case 'Easy':
-        return { backgroundColor: darkForestTheme.status.active };
-      case 'Intermediate':
-        return { backgroundColor: darkForestTheme.accent.burnt_orange };
-      case 'Hard':
-        return { backgroundColor: darkForestTheme.status.error };
-      default:
-        return { backgroundColor: darkForestTheme.text.secondary };
-    }
-  };
+  const milwaukeeCount = getWatersByRegion('Milwaukee').reduce((n, w) => n + w.spots.length, 0);
+  const maustonCount   = getWatersByRegion('Mauston').reduce((n, w) => n + w.spots.length, 0);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+
+      {/* ── HEADER ──────────────────────────────────────────── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>SEARCH & FISH</Text>
-        <Text style={styles.headerSubtitle}>
-          {filteredLocations.length} spots near you
-        </Text>
+        <Text style={styles.headerTitle}>Search & Fish</Text>
+        <Text style={styles.headerSubtitle}>Wisconsin — Bodies of Water</Text>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Feather
-          name="search"
-          size={20}
-          color={darkForestTheme.text.secondary}
-          style={styles.searchIcon}
-        />
-        <TouchableOpacity
+      {/* ── SEARCH ──────────────────────────────────────────── */}
+      <View style={styles.searchBar}>
+        <Feather name="search" size={17} color={colors.neutral.textSecondary} />
+        <TextInput
           style={styles.searchInput}
-          onPress={() => {}}
-        >
-          <Text
-            style={[
-              styles.searchPlaceholder,
-              searchQuery && styles.searchText,
-            ]}
-          >
-            {searchQuery || 'Search by name or fish...'}
-          </Text>
-        </TouchableOpacity>
+          placeholder="Search fish, water, or location…"
+          placeholderTextColor={colors.neutral.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Feather name="x-circle" size={17} color={colors.neutral.textSecondary} />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Region Filter Toggle */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedRegion.includes('Milwaukee') && styles.filterButtonActive,
-          ]}
-          onPress={() => setSelectedRegion('Milwaukee Shore')}
-        >
-          <Feather
-            name="map-pin"
-            size={16}
-            color={
-              selectedRegion.includes('Milwaukee')
-                ? darkForestTheme.accent.burnt_orange
-                : darkForestTheme.text.secondary
-            }
-          />
-          <Text
-            style={[
-              styles.filterButtonText,
-              selectedRegion.includes('Milwaukee') &&
-                styles.filterButtonTextActive,
-            ]}
-          >
-            Milwaukee
-          </Text>
-          <Text style={styles.filterDistance}>45 min</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedRegion === 'Mauston' && styles.filterButtonActive,
-          ]}
-          onPress={() => setSelectedRegion('Mauston')}
-        >
-          <Feather
-            name="map-pin"
-            size={16}
-            color={
-              selectedRegion === 'Mauston'
-                ? darkForestTheme.accent.burnt_orange
-                : darkForestTheme.text.secondary
-            }
-          />
-          <Text
-            style={[
-              styles.filterButtonText,
-              selectedRegion === 'Mauston' && styles.filterButtonTextActive,
-            ]}
-          >
-            Mauston
-          </Text>
-          <Text style={styles.filterDistance}>90 min</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Active Spot (Flip 3 Optimization) */}
-      {activeSpot && isFlip3 && (
-        <View style={styles.activeSectionFlip3}>
-          <Text style={styles.activeSectionTitle}>CURRENT SPOT</Text>
-          <View style={styles.activeSpotCard}>
-            <View style={styles.activeSpotInfo}>
-              <Text style={styles.activeSpotName}>{activeSpot.name}</Text>
-              <View style={styles.activeSpotMeta}>
-                <Feather name="navigation" size={14} color={darkForestTheme.accent.burnt_orange} />
-                <Text style={styles.activeSpotMetaText}>{activeSpot.accessPoint}</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.activeGoFishButton}
-              onPress={() => handleNavigation(activeSpot)}
-            >
-              <Text style={styles.activeGoFishText}>GO FISH →</Text>
-            </TouchableOpacity>
-          </View>
+      {/* ── REGION TABS ─────────────────────────────────────── */}
+      {!searchQuery.trim() && (
+        <View style={styles.regionTabs}>
+          {REGIONS.map(r => {
+            const count = r === 'Milwaukee' ? milwaukeeCount : maustonCount;
+            const active = selectedRegion === r;
+            return (
+              <TouchableOpacity
+                key={r}
+                style={[styles.regionTab, active && styles.regionTabActive]}
+                onPress={() => { setSelectedRegion(r); setExpandedWater(null); }}
+              >
+                <Text style={[styles.regionTabText, active && styles.regionTabTextActive]}>{r}</Text>
+                <View style={[styles.regionTabBadge, active && styles.regionTabBadgeActive]}>
+                  <Text style={[styles.regionTabBadgeText, active && styles.regionTabBadgeTextActive]}>
+                    {count} spots
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
 
-      {/* Location Grid - Bento Box Layout */}
-      <Text style={styles.sectionLabel}>NEARBY SPOTS</Text>
-      <FlatList
-        data={filteredLocations}
-        keyExtractor={item => item.id.toString()}
-        renderItem={renderLocationCard}
-        numColumns={2}
-        scrollEnabled={!isFlip3} // Disable scroll if in Flex Mode list
-        style={styles.grid}
-        columnWrapperStyle={styles.gridRow}
-        contentContainerStyle={styles.gridContent}
-      />
+      {/* ── WATER LIST ──────────────────────────────────────── */}
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+        {displayedWaters.map(water => {
+          const ts = typeStyle(water.type);
+          const open = expandedWater === water.id;
+          return (
+            <View key={water.id} style={styles.waterCard}>
+
+              {/* Water header */}
+              <TouchableOpacity
+                style={[styles.waterHead, { backgroundColor: ts.bg }]}
+                onPress={() => setExpandedWater(open ? null : water.id)}
+                activeOpacity={0.85}
+              >
+                <View style={styles.waterHeadLeft}>
+                  <View style={styles.waterMeta}>
+                    <Text style={[styles.waterTypeLabel, { color: ts.label }]}>{water.type.toUpperCase()}</Text>
+                    {water.dogFriendly && (
+                      <View style={styles.dogBadge}>
+                        <Text style={styles.dogEmoji}>🐕</Text>
+                        <Text style={styles.dogText}>Dog OK</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.waterName}>{water.name}</Text>
+                  <Text style={[styles.waterDesc, { color: ts.label + 'CC' }]} numberOfLines={2}>
+                    {water.description}
+                  </Text>
+                </View>
+                <View style={styles.waterHeadRight}>
+                  <View style={[styles.spotBadge, { borderColor: ts.label + '60' }]}>
+                    <Text style={[styles.spotBadgeNum, { color: ts.label }]}>{water.spots.length}</Text>
+                    <Text style={[styles.spotBadgeLabel, { color: ts.label + '99' }]}>spots</Text>
+                  </View>
+                  <Feather
+                    name={open ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={ts.label}
+                    style={{ marginTop: spacing.sm }}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {/* Fish species chips */}
+              <View style={styles.fishRow}>
+                {water.fish.map((f, i) => (
+                  <View key={i} style={styles.fishChip}>
+                    <Text style={styles.fishChipText}>{f}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Spots */}
+              {open && (
+                <View style={styles.spotsWrap}>
+                  {water.spots.map((spot, idx) => {
+                    const d = DIFF[spot.difficulty] || DIFF.Easy;
+                    return (
+                      <View key={spot.id} style={[styles.spotCard, idx < water.spots.length - 1 && styles.spotDivider]}>
+                        <View style={styles.spotHead}>
+                          <View style={styles.spotHeadLeft}>
+                            <Text style={styles.spotName}>{spot.name}</Text>
+                            <Text style={styles.spotAccess}>
+                              {spot.dogFriendly ? '🐕 ' : ''}{spot.accessPoint}
+                            </Text>
+                          </View>
+                          <View style={[styles.diffPill, { backgroundColor: d.bg, borderColor: d.border }]}>
+                            <Text style={[styles.diffText, { color: d.text }]}>{spot.difficulty}</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.spotFishRow}>
+                          {spot.fish.map((f, i) => (
+                            <View key={i} style={styles.spotFishPill}>
+                              <Text style={styles.spotFishText}>{f}</Text>
+                            </View>
+                          ))}
+                        </View>
+
+                        <Text style={styles.spotNotes}>{spot.notes}</Text>
+
+                        <TouchableOpacity
+                          style={styles.goBtn}
+                          onPress={() => launchNavigation(spot.query, spot.name)}
+                          activeOpacity={0.85}
+                        >
+                          <Feather name="navigation-2" size={15} color="#fff" />
+                          <Text style={styles.goBtnText}>GO FISH</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+            </View>
+          );
+        })}
+
+        {displayedWaters.length === 0 && (
+          <View style={styles.empty}>
+            <Text style={styles.emptyEmoji}>🔍</Text>
+            <Text style={styles.emptyText}>No results for "{searchQuery}"</Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: darkForestTheme.background.primary,
-  },
+  container: { flex: 1, backgroundColor: '#EDEBE4' },
 
-  // Header Styles
+  // Header
   header: {
-    backgroundColor: darkForestTheme.background.secondary,
-    paddingHorizontal: darkForestTheme.spacing.lg,
-    paddingTop: darkForestTheme.spacing.lg,
-    paddingBottom: darkForestTheme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: darkForestTheme.background.tertiary,
+    backgroundColor: colors.primary.forest,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   headerTitle: {
-    fontSize: darkForestTheme.typography.heading.size,
-    fontWeight: '700',
-    color: darkForestTheme.accent.burnt_orange,
-    letterSpacing: 1,
-    marginBottom: darkForestTheme.spacing.xs,
+    fontSize: typography.heading.fontSize,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.3,
   },
   headerSubtitle: {
-    fontSize: darkForestTheme.typography.body.size,
-    color: darkForestTheme.text.secondary,
-    fontWeight: '500',
+    fontSize: typography.caption.fontSize,
+    color: colors.accent.wasabi,
+    fontWeight: '600',
+    marginTop: 2,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 
-  // Search Container
-  searchContainer: {
+  // Search
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: darkForestTheme.spacing.lg,
-    marginVertical: darkForestTheme.spacing.md,
-    backgroundColor: darkForestTheme.background.secondary,
-    borderRadius: darkForestTheme.borderRadius.medium,
-    paddingLeft: darkForestTheme.spacing.md,
-    borderWidth: 1,
-    borderColor: darkForestTheme.background.tertiary,
-  },
-  searchIcon: {
-    marginRight: darkForestTheme.spacing.sm,
+    backgroundColor: '#fff',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    gap: spacing.sm,
+    ...shadows.sm,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: darkForestTheme.spacing.md,
-    paddingHorizontal: darkForestTheme.spacing.sm,
-  },
-  searchPlaceholder: {
-    color: darkForestTheme.text.tertiary,
-    fontSize: darkForestTheme.typography.body.size,
-  },
-  searchText: {
-    color: darkForestTheme.text.primary,
-    fontWeight: '600',
+    fontSize: typography.body.fontSize,
+    color: colors.primary.forest,
   },
 
-  // Filter Container
-  filterContainer: {
+  // Region tabs
+  regionTabs: {
     flexDirection: 'row',
-    marginHorizontal: darkForestTheme.spacing.lg,
-    marginBottom: darkForestTheme.spacing.lg,
-    gap: darkForestTheme.spacing.md,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.md,
+    gap: spacing.sm,
   },
-  filterButton: {
+  regionTab: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: darkForestTheme.background.secondary,
-    borderRadius: darkForestTheme.borderRadius.medium,
-    paddingVertical: darkForestTheme.spacing.md,
-    paddingHorizontal: darkForestTheme.spacing.sm,
+    gap: spacing.sm,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: spacing.md,
     borderWidth: 2,
-    borderColor: darkForestTheme.background.tertiary,
-    gap: darkForestTheme.spacing.sm,
+    borderColor: colors.neutral.borderLight,
+    ...shadows.sm,
   },
-  filterButtonActive: {
-    borderColor: darkForestTheme.accent.burnt_orange,
-    backgroundColor: `${darkForestTheme.accent.burnt_orange}15`,
+  regionTabActive: {
+    backgroundColor: colors.primary.forest,
+    borderColor: colors.primary.forest,
   },
-  filterButtonText: {
-    fontSize: darkForestTheme.typography.button.size - 2,
+  regionTabText: {
+    fontSize: typography.body.fontSize,
     fontWeight: '700',
-    color: darkForestTheme.text.secondary,
+    color: colors.neutral.textSecondary,
   },
-  filterButtonTextActive: {
-    color: darkForestTheme.accent.burnt_orange,
+  regionTabTextActive: { color: '#fff' },
+  regionTabBadge: {
+    backgroundColor: colors.neutral.gray200,
+    borderRadius: 8,
+    paddingHorizontal: spacing.xs + 2,
+    paddingVertical: 2,
   },
-  filterDistance: {
-    fontSize: darkForestTheme.typography.caption.size,
-    color: darkForestTheme.text.tertiary,
-    fontWeight: '500',
+  regionTabBadgeActive: { backgroundColor: 'rgba(168,198,159,0.25)' },
+  regionTabBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.neutral.textSecondary,
   },
+  regionTabBadgeTextActive: { color: colors.accent.wasabi },
 
-  // Active Section (Flip 3 Only)
-  activeSectionFlip3: {
-    paddingHorizontal: darkForestTheme.spacing.lg,
-    paddingVertical: darkForestTheme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: darkForestTheme.background.tertiary,
+  // List
+  list: { flex: 1, marginTop: spacing.md },
+  listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl, gap: spacing.md },
+
+  // Water card
+  waterCard: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    ...shadows.md,
   },
-  activeSectionTitle: {
-    fontSize: darkForestTheme.typography.caption.size,
-    fontWeight: '700',
-    color: darkForestTheme.accent.burnt_orange,
-    letterSpacing: 0.5,
-    marginBottom: darkForestTheme.spacing.sm,
-  },
-  activeSpotCard: {
+  waterHead: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: darkForestTheme.background.secondary,
-    borderRadius: darkForestTheme.borderRadius.large,
-    padding: darkForestTheme.spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: darkForestTheme.accent.burnt_orange,
+    padding: spacing.md,
   },
-  activeSpotInfo: {
-    flex: 1,
+  waterHeadLeft: { flex: 1, marginRight: spacing.md },
+  waterMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
+  waterTypeLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
-  activeSpotName: {
-    fontSize: darkForestTheme.typography.body.size,
-    fontWeight: '700',
-    color: darkForestTheme.text.primary,
-    marginBottom: darkForestTheme.spacing.xs,
-  },
-  activeSpotMeta: {
+  dogBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: darkForestTheme.spacing.xs,
+    gap: 3,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
-  activeSpotMetaText: {
-    fontSize: darkForestTheme.typography.caption.size,
-    color: darkForestTheme.text.secondary,
+  dogEmoji: { fontSize: 10 },
+  dogText: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.7)' },
+  waterName: {
+    fontSize: typography.subheading.fontSize,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: spacing.xs,
+  },
+  waterDesc: {
+    fontSize: 12,
     fontWeight: '500',
+    lineHeight: 16,
   },
-  activeGoFishButton: {
-    backgroundColor: darkForestTheme.accent.burnt_orange,
-    borderRadius: darkForestTheme.borderRadius.medium,
-    paddingHorizontal: darkForestTheme.spacing.md,
-    paddingVertical: darkForestTheme.spacing.sm,
-  },
-  activeGoFishText: {
-    color: darkForestTheme.text.primary,
-    fontWeight: '700',
-    fontSize: darkForestTheme.typography.caption.size + 1,
-    letterSpacing: 0.5,
-  },
-
-  // Location Card
-  locationCard: {
-    flex: 1,
-    backgroundColor: darkForestTheme.background.secondary,
-    borderRadius: darkForestTheme.borderRadius.large,
-    padding: darkForestTheme.spacing.md,
-    marginBottom: darkForestTheme.spacing.md,
-    ...darkForestTheme.shadow.medium,
+  waterHeadRight: { alignItems: 'center' },
+  spotBadge: {
     borderWidth: 1,
-    borderColor: darkForestTheme.background.tertiary,
-    minHeight: 200,
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    alignItems: 'center',
+    minWidth: 48,
   },
-  locationCardActive: {
-    borderColor: darkForestTheme.accent.burnt_orange,
-    backgroundColor: `${darkForestTheme.accent.burnt_orange}10`,
+  spotBadgeNum: {
+    fontSize: typography.subheading.fontSize,
+    fontWeight: '800',
+  },
+  spotBadgeLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
 
-  // Card Header
-  cardHeader: {
+  // Fish chips
+  fishRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+    backgroundColor: '#F5F8F5',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.borderLight,
+  },
+  fishChip: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  fishChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2E7D32',
+  },
+
+  // Spots
+  spotsWrap: { backgroundColor: '#FAFAF8' },
+  spotCard: { padding: spacing.md },
+  spotDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.borderLight,
+  },
+  spotHead: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: darkForestTheme.spacing.md,
+    marginBottom: spacing.sm,
   },
-  cardHeaderLeft: {
-    flex: 1,
-  },
-  locationName: {
-    fontSize: darkForestTheme.typography.subheading.size - 4,
+  spotHeadLeft: { flex: 1, marginRight: spacing.sm },
+  spotName: {
+    fontSize: typography.body.fontSize,
     fontWeight: '700',
-    color: darkForestTheme.text.primary,
-    marginBottom: darkForestTheme.spacing.xs,
+    color: colors.primary.forest,
+    marginBottom: 2,
   },
-  accessPoint: {
-    fontSize: darkForestTheme.typography.caption.size,
-    color: darkForestTheme.text.secondary,
+  spotAccess: {
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
     fontWeight: '500',
   },
-
-  // Difficulty Badge
-  difficultyBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: darkForestTheme.borderRadius.small,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...darkForestTheme.shadow.small,
+  diffPill: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
-  difficultyText: {
-    color: darkForestTheme.text.primary,
+  diffText: {
+    fontSize: 11,
     fontWeight: '700',
-    fontSize: 14,
   },
-
-  // Fish List
-  fishList: {
+  spotFishRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: darkForestTheme.spacing.xs,
-    marginBottom: darkForestTheme.spacing.md,
-    flex: 1,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
-  fishTag: {
-    backgroundColor: `${darkForestTheme.accent.burnt_orange}20`,
-    borderRadius: darkForestTheme.borderRadius.small,
-    paddingHorizontal: darkForestTheme.spacing.sm,
-    paddingVertical: darkForestTheme.spacing.xs,
+  spotFishPill: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
     borderWidth: 1,
-    borderColor: `${darkForestTheme.accent.burnt_orange}40`,
+    borderColor: '#FFCC80',
   },
-  fishTagText: {
-    fontSize: darkForestTheme.typography.caption.size - 1,
-    color: darkForestTheme.accent.burnt_orange,
+  spotFishText: {
+    fontSize: 11,
     fontWeight: '600',
+    color: '#E65100',
   },
-  fishMore: {
-    fontSize: darkForestTheme.typography.caption.size - 1,
-    color: darkForestTheme.text.tertiary,
-    fontWeight: '600',
-    alignSelf: 'center',
+  spotNotes: {
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    lineHeight: 17,
+    fontStyle: 'italic',
+    fontWeight: '500',
+    marginBottom: spacing.md,
   },
-
-  // GO FISH Button
-  goFishButton: {
-    backgroundColor: darkForestTheme.accent.burnt_orange,
+  goBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: darkForestTheme.borderRadius.medium,
-    paddingVertical: darkForestTheme.spacing.md,
-    gap: darkForestTheme.spacing.sm,
-    ...darkForestTheme.shadow.medium,
+    gap: spacing.sm,
+    backgroundColor: colors.accent.persimmon,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    ...shadows.sm,
   },
-  goFishText: {
-    color: darkForestTheme.text.primary,
-    fontWeight: '700',
-    fontSize: darkForestTheme.typography.button.size - 2,
+  goBtnText: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '800',
+    color: '#fff',
     letterSpacing: 1,
   },
 
-  // Grid Layout
-  sectionLabel: {
-    fontSize: darkForestTheme.typography.caption.size,
-    fontWeight: '700',
-    color: darkForestTheme.accent.burnt_orange,
-    letterSpacing: 0.5,
-    marginHorizontal: darkForestTheme.spacing.lg,
-    marginBottom: darkForestTheme.spacing.md,
+  // Empty
+  empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
+  emptyEmoji: { fontSize: 40 },
+  emptyText: {
+    fontSize: typography.body.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '500',
   },
-  grid: {
-    paddingHorizontal: darkForestTheme.spacing.lg,
-  },
-  gridRow: {
-    gap: darkForestTheme.spacing.md,
-  },
-  gridContent: {
-    paddingBottom: darkForestTheme.spacing.xl,
-  },
-  spacing: darkForestTheme.spacing,
 });

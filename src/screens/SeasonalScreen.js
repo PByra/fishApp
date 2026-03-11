@@ -1,405 +1,470 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { getCurrentInSeasonFish, getSeasonColor } from '../data/seasonalData';
+import { getCurrentInSeasonFish } from '../data/seasonalData';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
-export default function SeasonalScreen() {
-  const [inSeasonFish, setInSeasonFish] = useState([]);
-  const [expandedFish, setExpandedFish] = useState(null);
-  const [loading, setLoading] = useState(false);
+const STATUS = {
+  2: { label: 'IN SEASON',   bg: '#E8F5E9', text: '#2E7D32', dot: '#4CAF50', border: '#A5D6A7' },
+  1: { label: 'COMING SOON', bg: '#FFF3E0', text: '#E65100', dot: '#FF9800', border: '#FFCC80' },
+  0: { label: 'OFF SEASON',  bg: '#FAFAFA', text: '#9E9E9E', dot: '#BDBDBD', border: '#E0E0E0' },
+};
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+export default function SeasonalScreen({ route }) {
+  const [fish, setFish] = useState([]);
+  const [expanded, setExpanded] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const scrollRef = useRef(null);
+  const cardRefs = useRef({});
+
+  useEffect(() => { setFish(getCurrentInSeasonFish()); }, []);
 
   useEffect(() => {
-    // Get all fish with season status
-    const allFish = getCurrentInSeasonFish();
-    setInSeasonFish(allFish);
-    setLoading(false);
-  }, []);
+    const openFish = route?.params?.openFish;
+    if (!openFish || fish.length === 0) return;
+    setFilter('all');
+    setExpanded(openFish);
+    // Scroll to the card after a short delay to let layout settle
+    setTimeout(() => {
+      const ref = cardRefs.current[openFish];
+      if (ref && scrollRef.current) {
+        ref.measureLayout(
+          scrollRef.current.getInnerViewNode?.() ?? scrollRef.current,
+          (x, y) => { scrollRef.current.scrollTo({ y: y - 16, animated: true }); },
+          () => {}
+        );
+      }
+    }, 350);
+  }, [route?.params?.openFish, fish]);
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.accent.persimmon} />
-      </View>
-    );
-  }
+  const inSeasonCount = fish.filter(f => f.seasonStatus === 2).length;
+  const upcomingCount = fish.filter(f => f.seasonStatus === 1).length;
 
-  const getSeasonStatusLabel = (status) => {
-    if (status === 2) return 'IN SEASON';
-    if (status === 1) return 'COMING SOON';
-    return 'OFF SEASON';
-  };
-
-  const getSeasonStatusColor = (status) => {
-    if (status === 2) return colors.status.inSeason; // Green
-    if (status === 1) return colors.accent.persimmon; // Orange
-    return colors.status.offSeason; // Red
-  };
+  const displayed = fish.filter(f => {
+    if (filter === 'inseason') return f.seasonStatus === 2;
+    if (filter === 'upcoming') return f.seasonStatus === 1;
+    return true;
+  });
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+
+      {/* ── HEADER ──────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Wisconsin Fish Seasons</Text>
-        <Text style={styles.headerSubtitle}>Check what's biting now</Text>
+        <Text style={styles.headerSub}>Tap any fish for gear, tips & field ID photo</Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statPill}>
+            <View style={[styles.statDot, { backgroundColor: '#4CAF50' }]} />
+            <Text style={styles.statText}>{inSeasonCount} in season</Text>
+          </View>
+          <View style={styles.statPill}>
+            <View style={[styles.statDot, { backgroundColor: '#FF9800' }]} />
+            <Text style={styles.statText}>{upcomingCount} upcoming</Text>
+          </View>
+          <View style={styles.statPill}>
+            <View style={[styles.statDot, { backgroundColor: '#BDBDBD' }]} />
+            <Text style={styles.statText}>{fish.length - inSeasonCount - upcomingCount} off</Text>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.legendContainer}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#2E7D32' }]} />
-          <Text style={styles.legendText}>In Season</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#E65100' }]} />
-          <Text style={styles.legendText}>Coming Soon</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#C62828' }]} />
-          <Text style={styles.legendText}>Off Season</Text>
-        </View>
+      {/* ── FILTER TABS ─────────────────────────────────────── */}
+      <View style={styles.filterRow}>
+        {[
+          { key: 'all',      label: 'All Fish' },
+          { key: 'inseason', label: '🟢 In Season' },
+          { key: 'upcoming', label: '🟠 Upcoming' },
+        ].map(({ key, label }) => (
+          <TouchableOpacity key={key}
+            style={[styles.filterTab, filter === key && styles.filterTabActive]}
+            onPress={() => setFilter(key)}>
+            <Text style={[styles.filterTabText, filter === key && styles.filterTabTextActive]}>{label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {inSeasonFish.length > 0 ? (
-        inSeasonFish.map((item, idx) => (
-          <TouchableOpacity
-            key={idx}
-            style={[
-              styles.fishCard,
-              expandedFish === idx && styles.fishCardActive,
-              { borderLeftColor: item.colorStatus }
-            ]}
-            onPress={() => setExpandedFish(expandedFish === idx ? null : idx)}
-          >
-            <View style={styles.fishHeader}>
-              <View style={styles.fishNameContainer}>
-                <Text style={styles.fishName}>{item.fish}</Text>
-                <View style={styles.statusBadge}>
-                  <View style={[styles.statusDot, { backgroundColor: item.colorStatus }]} />
-                  <Text style={[styles.statusLabel, { color: item.colorStatus }]}>
-                    {getSeasonStatusLabel(item.seasonStatus)}
-                  </Text>
-                </View>
-              </View>
-              <View style={[styles.difficultyBadge, { backgroundColor: item.colorStatus }]}>
-                <Text style={styles.difficultyText}>{item.difficulty}</Text>
-              </View>
-            </View>
+      {/* ── LIST ────────────────────────────────────────────── */}
+      <ScrollView ref={scrollRef} style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {displayed.map((item, idx) => {
+          const s = STATUS[item.seasonStatus];
+          const open = expanded === item.fish;
+          return (
+            <TouchableOpacity key={item.fish}
+              ref={el => { cardRefs.current[item.fish] = el; }}
+              style={[styles.fishCard, { borderColor: s.border }, open && styles.fishCardOpen]}
+              onPress={() => setExpanded(open ? null : item.fish)}
+              activeOpacity={0.85}>
 
-            {expandedFish === idx && (
-              <View style={styles.expandedContent}>
-                {item.image && (
-                  <Image
-                    source={{ uri: item.image }}
-                    style={styles.fishImage}
-                    onError={() => console.log('Image failed to load')}
-                  />
-                )}
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Peak Months:</Text>
-                  <Text style={styles.value}>{item.peakMonths.map(m => {
-                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    return months[m - 1];
-                  }).join(', ')}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Depth Range:</Text>
-                  <Text style={styles.value}>{item.depth}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Average Size:</Text>
-                  <Text style={styles.value}>{item.avgSize}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Record Size:</Text>
-                  <Text style={styles.value}>{item.recordSize}</Text>
-                </View>
-
-                {item.recommendedGear && item.recommendedGear.length > 0 && (
-                  <View style={styles.gearSection}>
-                    <Text style={styles.gearTitle}>🎣 Recommended Gear:</Text>
-                    <View style={styles.gearList}>
-                      {item.recommendedGear.map((gear, gIdx) => (
-                        <View key={gIdx} style={styles.gearTag}>
-                          <Text style={styles.gearTagText}>{gear}</Text>
-                        </View>
-                      ))}
+              {/* Card header row */}
+              <View style={styles.cardHead}>
+                <View style={[styles.statusStripe, { backgroundColor: s.dot }]} />
+                <View style={styles.cardHeadContent}>
+                  <View style={styles.cardTop}>
+                    <Text style={styles.fishName}>{item.fish}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: s.bg, borderColor: s.border }]}>
+                      <View style={[styles.statusDot, { backgroundColor: s.dot }]} />
+                      <Text style={[styles.statusLabel, { color: s.text }]}>{s.label}</Text>
                     </View>
                   </View>
-                )}
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Tips:</Text>
-                  <Text style={styles.value}>{item.tips}</Text>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.metaChip}>📏 {item.depth}</Text>
+                    <Text style={styles.metaChip}>⚖️ {item.avgSize}</Text>
+                    <View style={[styles.diffChip, { backgroundColor: s.bg, borderColor: s.border }]}>
+                      <Text style={[styles.diffText, { color: s.text }]}>{item.difficulty}</Text>
+                    </View>
+                  </View>
                 </View>
-
-                <View style={[styles.seasonInfo, { borderLeftColor: item.colorStatus }]}>
-                  <Feather name="info" size={16} color={item.colorStatus} />
-                  <Text style={[styles.seasonInfoText, { color: item.colorStatus }]}>
-                    {item.seasonStatus === 2 && `${item.fish} is in season! Great time to fish!`}
-                    {item.seasonStatus === 1 && `${item.fish} season is coming soon!`}
-                    {item.seasonStatus === 0 && `${item.fish} is currently out of season.`}
-                  </Text>
-                </View>
+                <Feather name={open ? 'chevron-up' : 'chevron-down'} size={20} color={colors.neutral.gray400} />
               </View>
-            )}
-          </TouchableOpacity>
-        ))
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Feather name="calendar" size={48} color="#ccc" />
-          <Text style={styles.emptyText}>No fish data available</Text>
-        </View>
-      )}
 
-      <View style={styles.infoBox}>
-        <Feather name="alert-circle" size={20} color="#FF9800" />
-        <View style={styles.infoContent}>
-          <Text style={styles.infoTitle}>Check Local Regulations</Text>
-          <Text style={styles.infoText}>
-            Always verify current fishing regulations and license requirements with the Wisconsin DNR before fishing.
+              {/* Expanded */}
+              {open && (
+                <View style={styles.expanded}>
+
+                  {/* Field ID photo */}
+                  {item.image ? (
+                    <Image source={{ uri: item.image }} style={styles.fishPhoto} resizeMode="cover" />
+                  ) : (
+                    <View style={styles.photoPlaceholder}>
+                      <Text style={styles.photoPlaceholderText}>🐟  No photo available</Text>
+                    </View>
+                  )}
+                  <Text style={styles.photoCaption}>Field identification photo</Text>
+
+                  {/* Month calendar strip */}
+                  <View style={styles.monthsRow}>
+                    {MONTHS.map((m, i) => {
+                      const active = item.seasonMonths.includes(i + 1);
+                      const peak   = item.peakMonths.includes(i + 1);
+                      return (
+                        <View key={i} style={[
+                          styles.monthCell,
+                          active && styles.monthCellActive,
+                          peak   && styles.monthCellPeak,
+                        ]}>
+                          <Text style={[styles.monthText, active && styles.monthTextActive, peak && styles.monthTextPeak]}>
+                            {m}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                  <Text style={styles.monthLegend}>
+                    <Text style={{ color: '#4CAF50' }}>■</Text>{'  In season  '}
+                    <Text style={{ color: colors.accent.persimmon }}>■</Text>{'  Peak'}
+                  </Text>
+
+                  {/* Stats grid */}
+                  <View style={styles.detailGrid}>
+                    <View style={styles.detailBox}>
+                      <Text style={styles.detailLabel}>RECORD SIZE</Text>
+                      <Text style={styles.detailValue}>{item.recordSize}</Text>
+                    </View>
+                    <View style={styles.detailBox}>
+                      <Text style={styles.detailLabel}>DEPTH</Text>
+                      <Text style={styles.detailValue}>{item.depth}</Text>
+                    </View>
+                  </View>
+
+                  {/* Gear */}
+                  {item.recommendedGear?.length > 0 && (
+                    <View style={styles.gearBox}>
+                      <Text style={styles.gearBoxTitle}>🎣 Recommended Gear</Text>
+                      <View style={styles.gearWrap}>
+                        {item.recommendedGear.map((g, i) => (
+                          <View key={i} style={styles.gearTag}>
+                            <Text style={styles.gearTagText}>{g}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Tips */}
+                  <View style={styles.tipsBox}>
+                    <Feather name="zap" size={14} color={colors.accent.persimmon} />
+                    <Text style={styles.tipsText}>{item.tips}</Text>
+                  </View>
+
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+
+        <View style={styles.dnrBox}>
+          <Feather name="alert-circle" size={16} color={colors.accent.persimmon} />
+          <Text style={styles.dnrText}>
+            Always verify current regulations and bag limits with the Wisconsin DNR before fishing.
           </Text>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.neutral.lightGray,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.neutral.lightGray,
-  },
+  container: { flex: 1, backgroundColor: '#EDEBE4' },
+
   header: {
-    padding: spacing.lg,
     backgroundColor: colors.primary.forest,
-    paddingVertical: spacing.xl,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   headerTitle: {
     fontSize: typography.heading.fontSize,
-    fontWeight: '700',
-    color: colors.neutral.white,
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.3,
   },
-  headerSubtitle: {
-    fontSize: typography.body.fontSize,
+  headerSub: {
+    fontSize: typography.caption.fontSize,
     color: colors.accent.wasabi,
-    marginTop: spacing.xs,
     fontWeight: '500',
-  },
-  legendContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    justifyContent: 'space-around',
-    backgroundColor: colors.neutral.white,
+    marginTop: 3,
     marginBottom: spacing.md,
-    borderRadius: 16,
-    marginHorizontal: spacing.md,
-    marginTop: spacing.md,
-    ...shadows.sm,
   },
-  legendItem: {
+  statsRow: { flexDirection: 'row', gap: spacing.sm },
+  statPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
   },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  statDot: { width: 7, height: 7, borderRadius: 4 },
+  statText: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
+
+  filterRow: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.borderLight,
   },
-  legendText: {
-    fontSize: typography.caption.fontSize,
-    color: colors.neutral.textSecondary,
-    fontWeight: '600',
-    letterSpacing: 0.2,
+  filterTab: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#F0EDE6',
   },
+  filterTabActive: { backgroundColor: colors.primary.forest },
+  filterTabText: { fontSize: 12, fontWeight: '700', color: colors.neutral.textSecondary },
+  filterTabTextActive: { color: '#fff' },
+
+  scroll: { flex: 1 },
+  scrollContent: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
+
   fishCard: {
-    backgroundColor: colors.neutral.white,
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.md,
-    borderRadius: 24,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    ...shadows.sm,
+  },
+  fishCardOpen: { ...shadows.md },
+
+  cardHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: spacing.md,
-    ...shadows.md,
-    borderLeftWidth: 4,
-    minHeight: 56,
+    gap: spacing.md,
   },
-  fishCardActive: {
-    backgroundColor: '#f9f8f6',
-  },
-  fishHeader: {
+  statusStripe: { width: 5, height: 44, borderRadius: 3 },
+  cardHeadContent: { flex: 1 },
+  cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  fishNameContainer: {
-    flex: 1,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
   },
   fishName: {
-    fontSize: typography.heading.fontSize,
-    fontWeight: '700',
+    fontSize: typography.subheading.fontSize,
+    fontWeight: '800',
     color: colors.primary.forest,
-    letterSpacing: 0.3,
+    flex: 1,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.xs,
-    gap: spacing.xs,
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  metaRow: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
+  metaChip: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.neutral.textSecondary,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
   },
-  statusLabel: {
-    fontSize: typography.caption.fontSize,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  diffChip: {
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
   },
-  difficultyBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: 12,
-    minHeight: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  difficultyText: {
-    color: colors.neutral.white,
-    fontSize: typography.caption.fontSize,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  expandedContent: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
+  diffText: { fontSize: 11, fontWeight: '700' },
+
+  expanded: {
+    padding: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.neutral.borderLight,
+    gap: spacing.md,
   },
-  fishImage: {
+
+  fishPhoto: {
     width: '100%',
     height: 200,
-    borderRadius: 16,
-    marginBottom: spacing.md,
-    backgroundColor: colors.neutral.borderLight,
+    borderRadius: 12,
+    backgroundColor: '#E0E0E0',
   },
-  gearSection: {
-    marginVertical: spacing.md,
-    paddingVertical: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.neutral.borderLight,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral.borderLight,
+  photoPlaceholder: {
+    width: '100%',
+    height: 90,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.neutral.borderLight,
+    borderStyle: 'dashed',
   },
-  gearTitle: {
+  photoPlaceholderText: {
+    fontSize: typography.body.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '500',
+  },
+  photoCaption: {
+    fontSize: 11,
+    color: colors.neutral.textSecondary,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: -spacing.sm,
+  },
+
+  monthsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  monthCell: {
+    flex: 1,
+    marginHorizontal: 1,
+    paddingVertical: 6,
+    borderRadius: 5,
+    alignItems: 'center',
+    backgroundColor: '#F0EDE6',
+  },
+  monthCellActive: { backgroundColor: '#C8E6C9' },
+  monthCellPeak:   { backgroundColor: colors.accent.persimmon },
+  monthText: { fontSize: 8, fontWeight: '700', color: '#9E9E9E' },
+  monthTextActive: { color: '#2E7D32' },
+  monthTextPeak:   { color: '#fff' },
+  monthLegend: {
+    fontSize: 10,
+    color: colors.neutral.textSecondary,
+    fontWeight: '600',
+    marginTop: -spacing.xs,
+  },
+
+  detailGrid: { flexDirection: 'row', gap: spacing.md },
+  detailBox: {
+    flex: 1,
+    backgroundColor: '#F5F8F5',
+    borderRadius: 10,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent.wasabi,
+  },
+  detailLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: colors.neutral.textSecondary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  detailValue: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.primary.forest,
+  },
+
+  gearBox: {
+    backgroundColor: '#FFF5F2',
+    borderRadius: 12,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent.persimmon,
+  },
+  gearBoxTitle: {
     fontSize: typography.body.fontSize,
     fontWeight: '700',
     color: colors.primary.forest,
     marginBottom: spacing.sm,
-    letterSpacing: 0.3,
   },
-  gearList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
+  gearWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   gearTag: {
-    backgroundColor: '#FFF5F2',
-    borderColor: colors.accent.persimmon,
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderRadius: 14,
+    borderColor: '#FFCCBC',
+    borderRadius: 10,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: 5,
   },
   gearTagText: {
     fontSize: typography.caption.fontSize,
-    color: colors.accent.persimmon,
     fontWeight: '600',
-    letterSpacing: 0.2,
+    color: colors.accent.persimmon,
   },
-  detailRow: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    fontSize: typography.caption.fontSize,
-    fontWeight: '700',
-    color: colors.neutral.textSecondary,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  value: {
-    fontSize: typography.body.fontSize,
-    color: colors.primary.forest,
-    lineHeight: 20,
-    fontWeight: '500',
-  },
-  seasonInfo: {
+
+  tipsBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(59, 75, 72, 0.05)',
+    gap: spacing.sm,
+    backgroundColor: '#F5F8F5',
+    borderRadius: 10,
     padding: spacing.md,
-    borderRadius: 12,
-    marginTop: spacing.md,
     alignItems: 'flex-start',
     borderLeftWidth: 3,
-    gap: spacing.md,
+    borderLeftColor: colors.accent.wasabi,
   },
-  seasonInfoText: {
-    fontSize: typography.body.fontSize,
+  tipsText: {
     flex: 1,
+    fontSize: typography.body.fontSize,
+    color: colors.primary.forest,
     fontWeight: '500',
-    lineHeight: 20,
+    lineHeight: 21,
   },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 48,
-  },
-  emptyText: {
-    fontSize: typography.heading.small,
-    color: colors.neutral.textSecondary,
-    marginTop: spacing.md,
-    fontWeight: '500',
-  },
-  infoBox: {
+
+  dnrBox: {
     flexDirection: 'row',
+    gap: spacing.md,
     backgroundColor: '#FFF5F2',
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.lg,
+    borderRadius: 12,
     padding: spacing.md,
-    borderRadius: 16,
-    borderLeftWidth: 4,
+    alignItems: 'flex-start',
+    borderLeftWidth: 3,
     borderLeftColor: colors.accent.persimmon,
-    ...shadows.sm,
   },
-  infoContent: {
+  dnrText: {
     flex: 1,
-    marginLeft: spacing.sm,
-  },
-  infoTitle: {
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-    color: colors.accent.persimmon,
-    marginBottom: spacing.xs,
-    letterSpacing: 0.2,
-  },
-  infoText: {
     fontSize: typography.caption.fontSize,
     color: colors.neutral.textSecondary,
-    lineHeight: 16,
     fontWeight: '500',
+    lineHeight: 17,
   },
 });
