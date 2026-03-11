@@ -14,7 +14,17 @@ React Native Android fishing app designed for Galaxy Flip 3 and Android 10+ devi
 - [x] Documentation (README, GETTING_STARTED)
 
 ## In Progress
-- [ ] Dependencies installation on first run
+- [x] Dependencies installation on first run
+- [x] Search-to-Navigate feature (v1.0 - Query-based navigation)
+  - [x] Navigation service with Android geo: intent support
+  - [x] Deep Forest Dark Mode UI (#1A2421 background, #E67E22 accent)
+  - [x] Bento box grid layout (2 columns)
+  - [x] Region filter (Milwaukee 45min / Mauston 90min)
+  - [x] Active spot tracking for Flip 3 optimization
+  - [x] 11 verified locations with search queries
+  - [x] Galaxy Flip 3 (22:9 aspect ratio) support
+  - [ ] Functional search input bar
+  - [ ] Real-time distance calculation
 
 ## Remaining
 - [ ] Real weather API integration (OpenWeatherMap)
@@ -31,7 +41,17 @@ React Native Android fishing app designed for Galaxy Flip 3 and Android 10+ devi
 2. Run setup: `.\setup.bat` (Windows) or `bash setup.sh` (macOS/Linux)
 3. Start dev server: `npm start`
 4. Run on Android: `npm run android`
-5. Or use Expo Go app and scan QR code
+5. Try the "Search & Fish" tab to navigate to locations using Google Maps
+
+## New Features
+### Search-to-Navigate (v1.0)
+- Query-based navigation (no coordinates needed)
+- Android: Native `geo:0,0?q={query}` intent → Google Maps
+- iOS: Apple Maps with web fallback
+- Dark Forest theme optimized for outdoor use
+- Galaxy Flip 3 compatible (22:9 aspect ratio)
+- 11 fishing locations across 3 regions
+- Interactive Bento box UI with difficulty badges
 
 ## Key Features Implemented
 - **Fish Map**: Browse 7 Wisconsin waters with 10 fish species

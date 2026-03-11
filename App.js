@@ -7,6 +7,7 @@ import MapScreen from './src/screens/MapScreen';
 import WeatherScreen from './src/screens/WeatherScreen';
 import SeasonalScreen from './src/screens/SeasonalScreen';
 import SuppliesScreen from './src/screens/SuppliesScreen';
+import SearchNavigateScreen from './src/screens/SearchNavigateScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -21,6 +22,8 @@ export default function App() {
               iconName = focused ? 'home' : 'home';
             } else if (route.name === 'Map') {
               iconName = focused ? 'map' : 'map';
+            } else if (route.name === 'Search') {
+              iconName = focused ? 'search' : 'search';
             } else if (route.name === 'Weather') {
               iconName = focused ? 'cloud' : 'cloud';
             } else if (route.name === 'Seasonal') {
@@ -47,6 +50,7 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Wisconsin Fishing' }} />
+        <Tab.Screen name="Search" component={SearchNavigateScreen} options={{ title: 'Search & Fish' }} />
         <Tab.Screen name="Map" component={MapScreen} options={{ title: 'Fish Map' }} />
         <Tab.Screen name="Weather" component={WeatherScreen} options={{ title: 'Forecast' }} />
         <Tab.Screen name="Seasonal" component={SeasonalScreen} options={{ title: 'In Season' }} />

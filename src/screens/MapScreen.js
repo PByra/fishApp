@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Linking, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { wisconsinWaters } from '../data/wisconsinWaters';
+import { wisconsinLocations } from '../data/wisconsinWaters';
+import { colors, spacing, shadows, typography } from '../theme/colors';
+import NavigateButton from '../components/NavigateButton';
+import WaterConditionCard from '../components/WaterConditionCard';
 
 export default function MapScreen({ navigation }) {
   const [selectedWater, setSelectedWater] = useState(null);
@@ -16,7 +19,7 @@ export default function MapScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1B5E20" />
+        <ActivityIndicator size="large" color={colors.accent.persimmon} />
       </View>
     );
   }
@@ -25,66 +28,110 @@ export default function MapScreen({ navigation }) {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Wisconsin Fishing Waters</Text>
-        <Text style={styles.headerSubtitle}>Tap to view fish species & navigate</Text>
+        <Text style={styles.headerSubtitle}>13 Premium Locations • Verified Access Points</Text>
       </View>
 
-      {wisconsinWaters.map((water) => (
-        <TouchableOpacity
-          key={water.id}
-          style={[styles.waterCard, selectedWater?.id === water.id && styles.waterCardActive]}
-          onPress={() => setSelectedWater(selectedWater?.id === water.id ? null : water)}
-        >
-          <View style={styles.waterHeader}>
-            <View style={styles.waterInfo}>
-              <Feather name={water.type === 'lake' ? 'droplet' : 'navigation'} size={20} color="#1B5E20" />
-              <View style={styles.waterTextContainer}>
+      {wisconsinLocations.map((water) => (
+        <View key={water.id} style={styles.locationCardWrapper}>
+          {/* Card Header / Selector */}
+          <TouchableOpacity
+            style={[styles.cardSelector, selectedWater?.id === water.id && styles.cardSelectorActive]}
+            onPress={() => setSelectedWater(selectedWater?.id === water.id ? null : water)}
+          >
+            <View style={styles.selectorLeft}>
+              <View style={styles.typeIcon}>
+                <Feather 
+                  name={water.type === 'lake' ? 'droplet' : 'navigation'} 
+                  size={20} 
+                  color={colors.accent.persimmon}
+                />
+              </View>
+              <View style={styles.selectorText}>
                 <Text style={styles.waterName}>{water.name}</Text>
-                <Text style={styles.waterType}>{water.type.charAt(0).toUpperCase() + water.type.slice(1)}</Text>
+                <Text style={styles.waterType}>{water.type} • {water.difficulty}</Text>
               </View>
             </View>
-            <Text style={styles.difficultyBadge}>{water.difficulty}</Text>
-          </View>
+            <Feather 
+              name={selectedWater?.id === water.id ? 'chevron-up' : 'chevron-down'} 
+              size={24} 
+              color={colors.primary.forest}
+            />
+          </TouchableOpacity>
 
+          {/* Expanded Content */}
           {selectedWater?.id === water.id && (
             <View style={styles.expandedContent}>
-              <Text style={styles.bestSeason}>Best Season: {water.bestSeason}</Text>
-              <Text style={styles.fishTitle}>Fish Species:</Text>
-              <View style={styles.fishList}>
-                {water.fish.map((fish, idx) => (
-                  <View key={idx} style={styles.fishTag}>
-                    <Text style={styles.fishTagText}>{fish}</Text>
-                  </View>
-                ))}
+              {/* Water Condition Card */}
+              <View style={styles.waterConditionSection}>
+                <WaterConditionCard 
+                  waterTemp={68}
+                  clarity="Clear"
+                  flowRate="Normal"
+                  safetyStatus="Safe"
+                  bestFor={water.fish.slice(0, 3)}
+                />
               </View>
-              
+
+              {/* Fish Species */}
+              <View style={styles.fishSection}>
+                <Text style={styles.sectionTitle}>🎣 Fish Species</Text>
+                <View style={styles.fishGrid}>
+                  {water.fish.map((fish, idx) => (
+                    <View key={idx} style={styles.fishChip}>
+                      <Text style={styles.fishChipText}>{fish}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* Best Season */}
+              <View style={styles.bestSeasonSection}>
+                <Text style={styles.sectionTitle}>📅 Best Season</Text>
+                <Text style={styles.bestSeasonText}>{water.bestSeason}</Text>
+              </View>
+
+              {/* Location Details */}
               {water.accessPoints && water.accessPoints.length > 0 && (
-                <View style={styles.accessPointsSection}>
-                  <Text style={styles.accessPointsTitle}>🎣 Fishing Access Points:</Text>
+                <View style={styles.accessSection}>
+                  <Text style={styles.sectionTitle}>📍 Access Point</Text>
                   {water.accessPoints.map((point, idx) => (
-                    <TouchableOpacity
-                      key={idx}
-                      style={styles.accessPointButton}
-                      onPress={() => openGoogleMaps(point)}
-                    >
-                      <View style={styles.accessPointInfo}>
-                        <Feather name="map-pin" size={16} color="#1B5E20" />
-                        <View style={styles.accessPointText}>
-                          <Text style={styles.accessPointName}>{point.name}</Text>
-                          <Text style={styles.accessPointType}>{point.type}</Text>
-                        </View>
+                    <View key={idx} style={styles.accessPoint}>
+                      <View style={styles.accessPointDetails}>
+                        <Text style={styles.accessPointName}>{point.name}</Text>
+                        <Text style={styles.accessPointMeta}>
+                          {point.type} • {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
+                        </Text>
                       </View>
-                      <Feather name="external-link" size={14} color="#1B5E20" />
-                    </TouchableOpacity>
+                    </View>
                   ))}
                 </View>
               )}
+
+              {/* Navigate Button */}
+              <View style={styles.navigateSection}>
+                <NavigateButton 
+                  latitude={water.accessPoints[0]?.latitude}
+                  longitude={water.accessPoints[0]?.longitude}
+                  locationName={water.name}
+                  size="large"
+                />
+              </View>
+
+              {/* Location Coordinates */}
+              <View style={styles.coordsSection}>
+                <Text style={styles.coordsLabel}>Coordinates</Text>
+                <Text style={styles.coordsValue}>
+                  {water.location.latitude.toFixed(4)}, {water.location.longitude.toFixed(4)}
+                </Text>
+              </View>
             </View>
           )}
-        </TouchableOpacity>
+        </View>
       ))}
     </ScrollView>
   );
 }
+
 
 // Helper function to open Google Maps for a location
 const openGoogleMaps = (location) => {
@@ -108,162 +155,193 @@ const openGoogleMaps = (location) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F1E8',
+    backgroundColor: colors.neutral.lightGray,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F1E8',
+    backgroundColor: colors.neutral.lightGray,
   },
   header: {
-    padding: 16,
-    backgroundColor: '#1B5E20',
-    paddingVertical: 24,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    padding: spacing.lg,
+    backgroundColor: colors.primary.forest,
+    paddingVertical: spacing.xl,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: typography.heading.fontSize,
+    fontWeight: '700',
+    color: colors.neutral.white,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#E8F5E9',
-    marginTop: 4,
+    fontSize: typography.body.fontSize,
+    color: colors.accent.wasabi,
+    marginTop: spacing.xs,
+    fontWeight: '500',
   },
-  waterCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 12,
-    marginVertical: 8,
-    borderRadius: 10,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2E7D32',
+  locationCardWrapper: {
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.md,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: colors.neutral.white,
+    ...shadows.md,
   },
-  waterCardActive: {
-    backgroundColor: '#F0F7F0',
-    borderLeftColor: '#1B5E20',
-  },
-  waterHeader: {
+  cardSelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: spacing.md,
+    backgroundColor: colors.neutral.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.borderLight,
+    minHeight: 56, // Touch target minimum
   },
-  waterInfo: {
+  cardSelectorActive: {
+    backgroundColor: '#f9f8f6',
+    borderBottomColor: colors.accent.persimmon,
+  },
+  selectorLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  waterTextContainer: {
-    marginLeft: 12,
+  typeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FFF5F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  selectorText: {
     flex: 1,
   },
   waterName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1B5E20',
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.primary.forest,
+    letterSpacing: 0.3,
   },
   waterType: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  difficultyBadge: {
-    backgroundColor: '#2E7D32',
-    color: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    fontSize: 11,
-    fontWeight: 'bold',
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '500',
+    marginTop: spacing.xs,
   },
   expandedContent: {
-    marginTop: 14,
-    paddingTop: 14,
+    backgroundColor: colors.neutral.white,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#E8F5E9',
+    borderTopColor: colors.neutral.borderLight,
   },
-  bestSeason: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 10,
-    fontStyle: 'italic',
+  waterConditionSection: {
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
   },
-  fishTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#1B5E20',
-    marginBottom: 8,
+  fishSection: {
+    marginBottom: spacing.lg,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.borderLight,
   },
-  fishList: {
+  sectionTitle: {
+    fontSize: typography.heading.small,
+    fontWeight: '700',
+    color: colors.primary.forest,
+    marginBottom: spacing.sm,
+    letterSpacing: 0.3,
+  },
+  fishGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 12,
+    gap: spacing.sm,
   },
-  fishTag: {
-    backgroundColor: '#E8F5E9',
-    borderColor: '#2E7D32',
+  fishChip: {
+    backgroundColor: '#F0F7F4',
+    borderRadius: 16,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
     borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginRight: 8,
-    marginBottom: 6,
+    borderColor: colors.accent.wasabi,
   },
-  fishTagText: {
-    fontSize: 11,
-    color: '#1B5E20',
+  fishChipText: {
+    fontSize: typography.caption.fontSize,
     fontWeight: '600',
+    color: colors.primary.darkForest,
+    letterSpacing: 0.2,
   },
-  accessPointsSection: {
-    marginVertical: 12,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E8F5E9',
+  bestSeasonSection: {
+    backgroundColor: '#FFF5F2',
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent.persimmon,
+  },
+  bestSeasonText: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+    color: colors.primary.forest,
+    lineHeight: 24,
+  },
+  accessSection: {
+    marginBottom: spacing.lg,
+    paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8F5E9',
+    borderBottomColor: colors.neutral.borderLight,
   },
-  accessPointsTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#1B5E20',
-    marginBottom: 10,
-  },
-  accessPointButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F5F1E8',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+  accessPoint: {
+    backgroundColor: '#F9F8F6',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginTop: spacing.sm,
     borderLeftWidth: 3,
-    borderLeftColor: '#2E7D32',
+    borderLeftColor: colors.accent.persimmon,
   },
-  accessPointInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  accessPointText: {
-    marginLeft: 10,
+  accessPointDetails: {
     flex: 1,
   },
   accessPointName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1B5E20',
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.primary.forest,
+    marginBottom: spacing.xs,
+    letterSpacing: 0.2,
   },
-  accessPointType: {
-    fontSize: 11,
-    color: '#666',
-    marginTop: 2,
+  accessPointMeta: {
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '500',
+  },
+  navigateSection: {
+    marginBottom: spacing.lg,
+  },
+  coordsSection: {
+    backgroundColor: '#F9F8F6',
+    borderRadius: 12,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.neutral.textSecondary,
+  },
+  coordsLabel: {
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  coordsValue: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+    color: colors.primary.forest,
+    fontFamily: 'monospace',
+    letterSpacing: 0.1,
   },
 });

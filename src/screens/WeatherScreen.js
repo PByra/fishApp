@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { colors, spacing, shadows, typography } from '../theme/colors';
 
 export default function WeatherScreen() {
   // Mock weather data - no API calls, no async, no crashes
@@ -23,10 +24,10 @@ export default function WeatherScreen() {
 
   const getFishingColor = (condition) => {
     switch (condition) {
-      case 'Good': return '#2E7D32';
-      case 'Excellent': return '#1B5E20';
-      case 'Fair': return '#E65100';
-      default: return '#01579B';
+      case 'Good': return colors.status.inSeason;
+      case 'Excellent': return colors.primary.forest;
+      case 'Fair': return colors.accent.persimmon;
+      default: return colors.primary.darkForest;
     }
   };
 
@@ -83,73 +84,73 @@ export default function WeatherScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F1E8',
-    paddingVertical: 16,
+    backgroundColor: colors.neutral.lightGray,
+    paddingVertical: spacing.lg,
   },
   todayContainer: {
-    backgroundColor: '#1B5E20',
-    marginHorizontal: 12,
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5,
+    backgroundColor: colors.primary.forest,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    borderRadius: 24,
+    padding: spacing.lg,
+    ...shadows.lg,
   },
   todayTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   emoji: {
-    fontSize: 48,
-    marginRight: 12,
+    fontSize: 56,
+    marginRight: spacing.md,
   },
   todayInfo: {
     flex: 1,
   },
   condition: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: typography.heading.fontSize,
+    fontWeight: '700',
+    color: colors.neutral.white,
+    letterSpacing: 0.5,
   },
   location: {
-    fontSize: 14,
-    color: '#E8F5E9',
-    marginTop: 2,
+    fontSize: typography.body.fontSize,
+    color: colors.accent.wasabi,
+    marginTop: spacing.xs,
+    fontWeight: '500',
   },
   temperatureSection: {
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   temperature: {
     fontSize: 56,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: '700',
+    color: colors.neutral.white,
+    letterSpacing: 0.3,
   },
   weatherDetails: {
     flexDirection: 'row',
-    marginTop: 12,
-    gap: 24,
+    marginTop: spacing.md,
+    gap: spacing.lg,
   },
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.sm,
   },
   detailText: {
-    fontSize: 14,
-    color: '#E8F5E9',
+    fontSize: typography.body.fontSize,
+    color: colors.accent.wasabi,
     fontWeight: '600',
   },
   fishingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 12,
+    gap: spacing.sm,
+    minHeight: 44,
   },
   fishingEmoji: {
     fontSize: 20,
@@ -158,51 +159,54 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fishingLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.neutral.white,
+    letterSpacing: 0.2,
   },
   forecastRibbon: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    gap: 10,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
   },
   dayCard: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: colors.neutral.white,
+    borderRadius: 16,
+    padding: spacing.md,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    ...shadows.sm,
     borderLeftWidth: 3,
-    borderLeftColor: '#2E7D32',
+    borderLeftColor: colors.accent.wasabi,
+    minHeight: 140,
+    justifyContent: 'center',
   },
   dayEmoji: {
     fontSize: 32,
-    marginBottom: 6,
+    marginBottom: spacing.sm,
   },
   dayName: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#1B5E20',
-    marginBottom: 4,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '700',
+    color: colors.primary.forest,
+    marginBottom: spacing.xs,
+    letterSpacing: 0.3,
   },
   dayTemp: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1B5E20',
-    marginBottom: 4,
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.primary.forest,
+    marginBottom: spacing.xs,
   },
   dayWind: {
-    fontSize: 11,
-    color: '#666',
-    marginBottom: 6,
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    marginBottom: spacing.sm,
+    fontWeight: '500',
   },
   dayRating: {
-    fontSize: 12,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '600',
+    color: colors.accent.persimmon,
   },
 });

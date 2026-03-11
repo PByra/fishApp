@@ -110,6 +110,17 @@ export const seasonalFish = {
     recommendedGear: ['Medium Catfish Rod', 'Cut Bait', 'Chicken Liver', 'Stink Bait'],
     avgSize: '2-5 lbs',
     recordSize: '50+ lbs'
+  },
+  'Steelhead': {
+    seasonMonths: [2, 3, 4, 9, 10, 11],
+    peakMonths: [3, 4, 10],
+    depth: '10-30 ft',
+    difficulty: 'Hard',
+    tips: 'Migratory rainbow trout. Spring run (Feb-Apr) and fall run (Sep-Nov). Use drift fishing with eggs or spinners.',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Salmo_gairdneri2.jpg/1200px-Salmo_gairdneri2.jpg',
+    recommendedGear: ['Medium Spinning Rod', 'Drift Bobber', 'Salmon Eggs', 'Small Spinners', 'Fly Rod'],
+    avgSize: '8-12 lbs',
+    recordSize: '20+ lbs'
   }
 };
 

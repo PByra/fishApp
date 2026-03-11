@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish, getSeasonColor } from '../data/seasonalData';
+import { colors, spacing, shadows, typography } from '../theme/colors';
 
 export default function SeasonalScreen() {
   const [inSeasonFish, setInSeasonFish] = useState([]);
@@ -18,7 +19,7 @@ export default function SeasonalScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1B5E20" />
+        <ActivityIndicator size="large" color={colors.accent.persimmon} />
       </View>
     );
   }
@@ -30,9 +31,9 @@ export default function SeasonalScreen() {
   };
 
   const getSeasonStatusColor = (status) => {
-    if (status === 2) return '#2E7D32'; // Green
-    if (status === 1) return '#E65100'; // Orange
-    return '#C62828'; // Red
+    if (status === 2) return colors.status.inSeason; // Green
+    if (status === 1) return colors.accent.persimmon; // Orange
+    return colors.status.offSeason; // Red
   };
 
   return (
@@ -169,43 +170,49 @@ export default function SeasonalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F1E8',
+    backgroundColor: colors.neutral.lightGray,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F1E8',
+    backgroundColor: colors.neutral.lightGray,
   },
   header: {
-    padding: 16,
-    backgroundColor: '#1B5E20',
-    paddingVertical: 24,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    padding: spacing.lg,
+    backgroundColor: colors.primary.forest,
+    paddingVertical: spacing.xl,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: typography.heading.fontSize,
+    fontWeight: '700',
+    color: colors.neutral.white,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#E8F5E9',
-    marginTop: 4,
+    fontSize: typography.body.fontSize,
+    color: colors.accent.wasabi,
+    marginTop: spacing.xs,
+    fontWeight: '500',
   },
   legendContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     justifyContent: 'space-around',
-    backgroundColor: '#fff',
-    marginBottom: 8,
+    backgroundColor: colors.neutral.white,
+    marginBottom: spacing.md,
+    borderRadius: 16,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    ...shadows.sm,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.xs,
   },
   legendDot: {
     width: 10,
@@ -213,25 +220,23 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   legendText: {
-    fontSize: 11,
-    color: '#666',
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   fishCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 12,
-    marginVertical: 8,
-    borderRadius: 10,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: colors.neutral.white,
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.md,
+    borderRadius: 24,
+    padding: spacing.md,
+    ...shadows.md,
     borderLeftWidth: 4,
+    minHeight: 56,
   },
   fishCardActive: {
-    backgroundColor: '#F0F7F0',
+    backgroundColor: '#f9f8f6',
   },
   fishHeader: {
     flexDirection: 'row',
@@ -242,112 +247,121 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fishName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1B5E20',
+    fontSize: typography.heading.fontSize,
+    fontWeight: '700',
+    color: colors.primary.forest,
+    letterSpacing: 0.3,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
-    gap: 4,
+    marginTop: spacing.xs,
+    gap: spacing.xs,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   statusLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
+    fontSize: typography.caption.fontSize,
+    fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   difficultyBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: 12,
+    minHeight: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   difficultyText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: colors.neutral.white,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   expandedContent: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#E8F5E9',
+    borderTopColor: colors.neutral.borderLight,
   },
   fishImage: {
     width: '100%',
     height: 200,
-    borderRadius: 8,
-    marginBottom: 12,
-    backgroundColor: '#E8F5E9',
+    borderRadius: 16,
+    marginBottom: spacing.md,
+    backgroundColor: colors.neutral.borderLight,
   },
   gearSection: {
-    marginVertical: 12,
-    paddingVertical: 12,
+    marginVertical: spacing.md,
+    paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#E8F5E9',
+    borderTopColor: colors.neutral.borderLight,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8F5E9',
+    borderBottomColor: colors.neutral.borderLight,
   },
   gearTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#1B5E20',
-    marginBottom: 8,
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.primary.forest,
+    marginBottom: spacing.sm,
+    letterSpacing: 0.3,
   },
   gearList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: spacing.sm,
   },
   gearTag: {
-    backgroundColor: '#fff3e0',
-    borderColor: '#E65100',
+    backgroundColor: '#FFF5F2',
+    borderColor: colors.accent.persimmon,
     borderWidth: 1,
     borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
   gearTagText: {
-    fontSize: 12,
-    color: '#E65100',
+    fontSize: typography.caption.fontSize,
+    color: colors.accent.persimmon,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   detailRow: {
-    marginBottom: 10,
+    marginBottom: spacing.md,
   },
   label: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#1B5E20',
-    marginBottom: 3,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '700',
+    color: colors.neutral.textSecondary,
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   value: {
-    fontSize: 13,
-    color: '#333',
-    lineHeight: 18,
+    fontSize: typography.body.fontSize,
+    color: colors.primary.forest,
+    lineHeight: 20,
+    fontWeight: '500',
   },
   seasonInfo: {
     flexDirection: 'row',
-    backgroundColor: '#F0F7F0',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
+    backgroundColor: 'rgba(59, 75, 72, 0.05)',
+    padding: spacing.md,
+    borderRadius: 12,
+    marginTop: spacing.md,
     alignItems: 'flex-start',
     borderLeftWidth: 3,
-    gap: 8,
+    gap: spacing.md,
   },
   seasonInfoText: {
-    fontSize: 12,
+    fontSize: typography.body.fontSize,
     flex: 1,
     fontWeight: '500',
-    lineHeight: 16,
+    lineHeight: 20,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -355,32 +369,37 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 16,
+    fontSize: typography.heading.small,
+    color: colors.neutral.textSecondary,
+    marginTop: spacing.md,
+    fontWeight: '500',
   },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#fff3e0',
-    margin: 12,
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: '#FFF5F2',
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.lg,
+    padding: spacing.md,
+    borderRadius: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#E65100',
+    borderLeftColor: colors.accent.persimmon,
+    ...shadows.sm,
   },
   infoContent: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: spacing.sm,
   },
   infoTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#E65100',
-    marginBottom: 2,
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.accent.persimmon,
+    marginBottom: spacing.xs,
+    letterSpacing: 0.2,
   },
   infoText: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
     lineHeight: 16,
+    fontWeight: '500',
   },
 });

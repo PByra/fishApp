@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
+import { colors, spacing, shadows, typography } from '../theme/colors';
 
 export default function HomeScreen({ navigation }) {
   const [inSeasonFish, setInSeasonFish] = useState([]);
@@ -133,19 +134,19 @@ export default function HomeScreen({ navigation }) {
         
         <View style={styles.linkGrid}>
           <TouchableOpacity 
-            style={[styles.linkCard, { borderLeftColor: '#1B5E20' }]}
+            style={[styles.linkCard, { borderLeftColor: colors.accent.wasabi }]}
             onPress={() => navigation.navigate('Map')}
           >
-            <Feather name="map" size={28} color="#1B5E20" />
+            <Feather name="map" size={28} color={colors.accent.wasabi} />
             <Text style={styles.linkLabel}>Fishing Waters</Text>
-            <Text style={styles.linkSub}>11 locations</Text>
+            <Text style={styles.linkSub}>13 locations</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.linkCard, { borderLeftColor: '#E65100' }]}
+            style={[styles.linkCard, { borderLeftColor: colors.accent.persimmon }]}
             onPress={() => navigation.navigate('Supplies')}
           >
-            <Feather name="shopping-cart" size={28} color="#E65100" />
+            <Feather name="shopping-cart" size={28} color={colors.accent.persimmon} />
             <Text style={styles.linkLabel}>Local Suppliers</Text>
             <Text style={styles.linkSub}>Wisconsin brands</Text>
           </TouchableOpacity>
@@ -177,46 +178,44 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F1E8',
+    backgroundColor: colors.neutral.lightGray,
   },
 
   // ============ TODAY'S WEATHER ============
   weatherContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    marginBottom: 8,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    marginBottom: spacing.md,
   },
   weatherTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   sectionLabel: {
-    fontSize: 16,
+    fontSize: typography.body.fontSize,
     fontWeight: '700',
-    color: '#1B5E20',
+    color: colors.primary.forest,
     letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   seeMore: {
-    fontSize: 12,
-    color: '#2E7D32',
-    fontWeight: '600',
+    fontSize: typography.caption.fontSize,
+    color: colors.accent.wasabi,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   weatherCard: {
-    backgroundColor: '#1B5E20',
-    borderRadius: 14,
-    padding: 18,
+    backgroundColor: colors.primary.forest,
+    borderRadius: 20,
+    padding: spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5,
+    marginBottom: spacing.md,
+    ...shadows.lg,
   },
   weatherLeft: {
     flex: 1,
@@ -224,18 +223,20 @@ const styles = StyleSheet.create({
   tempDisplay: {
     fontSize: 52,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.neutral.white,
     lineHeight: 60,
   },
   condition: {
-    fontSize: 14,
-    color: '#E8F5E9',
-    marginTop: 4,
+    fontSize: typography.body.fontSize,
+    color: colors.accent.wasabi,
+    marginTop: spacing.sm,
+    fontWeight: '500',
   },
   location: {
-    fontSize: 12,
-    color: '#B8E6B8',
-    marginTop: 2,
+    fontSize: typography.caption.fontSize,
+    color: colors.accent.wasabi,
+    marginTop: spacing.xs,
+    fontWeight: '500',
   },
   weatherRight: {
     alignItems: 'flex-end',
@@ -243,60 +244,61 @@ const styles = StyleSheet.create({
   },
   weatherEmoji: {
     fontSize: 44,
-    marginBottom: 8,
+    marginBottom: spacing.md,
   },
   weatherDetails: {
-    gap: 4,
+    gap: spacing.xs,
   },
   detail: {
-    fontSize: 12,
-    color: '#E8F5E9',
-    fontWeight: '500',
+    fontSize: typography.caption.fontSize,
+    color: colors.accent.wasabi,
+    fontWeight: '600',
   },
   fishingConditionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F5E9',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    gap: 8,
+    backgroundColor: 'rgba(168, 198, 159, 0.15)',
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent.wasabi,
   },
   badgeDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#2E7D32',
+    backgroundColor: colors.status.inSeason,
   },
   conditionText: {
-    fontSize: 12,
-    color: '#1B5E20',
+    fontSize: typography.caption.fontSize,
+    color: colors.primary.forest,
+    fontWeight: '500',
   },
 
   // ============ IN-SEASON FISH ============
   inSeasonContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   fishCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderLeftWidth: 5,
-    borderLeftColor: '#2E7D32',
-    padding: 14,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: colors.neutral.white,
+    borderRadius: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent.wasabi,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    ...shadows.sm,
+    minHeight: 56,
+    justifyContent: 'center',
   },
   fishCardContent: {
     flexDirection: 'row',
@@ -307,137 +309,137 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fishName: {
-    fontSize: 15,
+    fontSize: typography.body.fontSize,
     fontWeight: '700',
-    color: '#1B5E20',
+    color: colors.primary.forest,
+    letterSpacing: 0.3,
   },
   fishSize: {
-    fontSize: 11,
-    color: '#888',
-    marginTop: 2,
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    marginTop: spacing.xs,
+    fontWeight: '500',
   },
   fishRightSection: {
     alignItems: 'flex-end',
   },
   depthLabel: {
-    fontSize: 10,
-    color: '#999',
-    fontWeight: '500',
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.2,
   },
   depth: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#2E7D32',
-    marginTop: 2,
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    color: colors.accent.wasabi,
+    marginTop: spacing.xs,
   },
 
   // ============ RECOMMENDED GEAR ============
   gearContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
   },
   gearGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: spacing.md,
   },
   gearItem: {
     width: '30%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: colors.neutral.white,
+    borderRadius: 16,
+    padding: spacing.md,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    ...shadows.sm,
   },
   gearIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: '#E8F5E9',
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: 'rgba(168, 198, 159, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.accent.wasabi,
   },
   gearEmoji: {
     fontSize: 24,
   },
   gearName: {
-    fontSize: 10,
-    color: '#1B5E20',
-    fontWeight: '600',
+    fontSize: typography.caption.fontSize,
+    color: colors.primary.forest,
+    fontWeight: '700',
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
 
   // ============ QUICK LINKS ============
   quickLinksContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
   },
   linkGrid: {
-    gap: 12,
+    gap: spacing.md,
   },
   linkCard: {
-    backgroundColor: '#fff',
-    borderLeftWidth: 5,
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: colors.neutral.white,
+    borderLeftWidth: 4,
+    borderRadius: 16,
+    padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    gap: spacing.md,
+    ...shadows.sm,
+    minHeight: 56,
   },
   linkLabel: {
-    fontSize: 14,
+    fontSize: typography.body.fontSize,
     fontWeight: '700',
-    color: '#1B5E20',
+    color: colors.primary.forest,
+    letterSpacing: 0.3,
   },
   linkSub: {
-    fontSize: 11,
-    color: '#888',
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    fontWeight: '500',
   },
 
   // ============ INFO BOXES ============
   infoSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 10,
-    marginBottom: 20,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+    marginBottom: spacing.xl,
   },
   infoBox: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: colors.neutral.white,
+    borderRadius: 16,
+    padding: spacing.md,
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
     alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    ...shadows.sm,
   },
   infoText: {
     flex: 1,
   },
   infoTitle: {
-    fontSize: 13,
+    fontSize: typography.body.fontSize,
     fontWeight: '700',
-    color: '#1B5E20',
-    marginBottom: 2,
+    color: colors.primary.forest,
+    marginBottom: spacing.xs,
+    letterSpacing: 0.2,
   },
   infoDesc: {
-    fontSize: 11,
-    color: '#666',
-    lineHeight: 15,
+    fontSize: typography.caption.fontSize,
+    color: colors.neutral.textSecondary,
+    lineHeight: 16,
+    fontWeight: '500',
   },
 });
