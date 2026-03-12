@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
-import { TODAY } from '../data/weatherData';
+import { TODAY as TODAY_STATIC } from '../data/weatherData';
+import { fetchMilwaukeeWeather } from '../services/weatherService';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
 const GEAR_EMOJI = (gear) => {
@@ -18,9 +19,13 @@ const GEAR_EMOJI = (gear) => {
 
 export default function HomeScreen({ navigation }) {
   const [inSeasonFish, setInSeasonFish] = useState([]);
+  const [today, setToday] = useState(TODAY_STATIC);
 
   useEffect(() => {
     setInSeasonFish(getCurrentInSeasonFish());
+    fetchMilwaukeeWeather()
+      .then(f => setToday(f[0]))
+      .catch(() => {}); // silently keep static fallback on failure
   }, []);
 
   const topInSeason = useMemo(

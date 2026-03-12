@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { FORECAST } from '../data/weatherData';
+import { FORECAST as STATIC_FORECAST } from '../data/weatherData';
+import { fetchMilwaukeeWeather } from '../services/weatherService';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
 // ─── Wally Walleye's Quip Bank ───────────────────────────────────────────────
@@ -249,8 +250,6 @@ function getWallyQuip(rating) {
   return bank[dayIndex % bank.length];
 }
 
-// FORECAST is now imported from ../data/weatherData — single source of truth shared with HomeScreen
-
 const RATING_BARS = { Excellent: 4, Good: 3, Fair: 2, Poor: 1 };
 
 function ActivityBars({ rating, color }) {
@@ -273,9 +272,16 @@ const barStyles = StyleSheet.create({
 });
 
 export default function WeatherScreen() {
-  const today = FORECAST[0];
+  const [forecast, setForecast] = useState(STATIC_FORECAST);
+  const today = forecast[0];
   const wallyQuip = useMemo(() => getWallyQuip(today.fishing), [today.fishing]);
   const [useCelsius, setUseCelsius] = useState(false);
+
+  useEffect(() => {
+    fetchMilwaukeeWeather()
+      .then(setForecast)
+      .catch(() => {}); // silently keep static fallback on failure
+  }, []);
   const fmt = (f) => useCelsius ? String(Math.round((f - 32) * 5 / 9)) : String(f);
   const unit = useCelsius ? '°C' : '°F';
 
@@ -348,10 +354,10 @@ export default function WeatherScreen() {
         </View>
 
         <View style={styles.forecastCard}>
-          {FORECAST.map((day, i) => (
+          {forecast.map((day, i) => (
             <View
               key={i}
-              style={[styles.fRow, i < FORECAST.length - 1 && styles.fDivider]}
+              style={[styles.fRow, i < forecast.length - 1 && styles.fDivider]}
             >
               <Text style={styles.fEmoji}>{day.emoji}</Text>
 
