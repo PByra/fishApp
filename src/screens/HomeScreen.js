@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
@@ -32,7 +32,19 @@ export default function HomeScreen({ navigation }) {
     setInSeasonFish(getCurrentInSeasonFish());
   }, []);
 
-  const topInSeason = inSeasonFish.filter(f => f.seasonStatus === 2).slice(0, 3);
+  const topInSeason = useMemo(
+    () => inSeasonFish.filter(f => f.seasonStatus === 2).slice(0, 3),
+    [inSeasonFish],
+  );
+
+  const goToSeasonalFish = useCallback(
+    (fishName) => navigation.navigate('Seasonal', { openFish: fishName }),
+    [navigation],
+  );
+  const goToSearch = useCallback(() => navigation.navigate('Search'), [navigation]);
+  const goToJournal = useCallback(() => navigation.navigate('Journal'), [navigation]);
+  const goToSupplies = useCallback(() => navigation.navigate('Supplies'), [navigation]);
+  const goToWeather = useCallback(() => navigation.navigate('Weather'), [navigation]);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
@@ -65,7 +77,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.conditionBarText}>
             Fishing: <Text style={styles.conditionBarStatus}>{WEATHER.fishingCondition}</Text>
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Weather')} style={styles.forecastBtn}>
+          <TouchableOpacity onPress={goToWeather} style={styles.forecastBtn}>
             <Text style={styles.forecastBtnText}>Full Forecast</Text>
             <Feather name="chevron-right" size={13} color={colors.accent.wasabi} />
           </TouchableOpacity>
@@ -80,7 +92,7 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.sectionAccentBar} />
               <Text style={styles.sectionHeadText}>IN SEASON NOW</Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Seasonal')} style={styles.seeAllBtn}>
+            <TouchableOpacity onPress={() => goToSeasonalFish()} style={styles.seeAllBtn}>
               <Text style={styles.seeAllText}>All Fish</Text>
               <Feather name="chevron-right" size={14} color={colors.accent.persimmon} />
             </TouchableOpacity>
@@ -90,7 +102,7 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity
               key={idx}
               style={styles.fishCard}
-              onPress={() => navigation.navigate('Seasonal', { openFish: fish.fish })}
+              onPress={() => goToSeasonalFish(fish.fish)}
               activeOpacity={0.85}
             >
               {/* Status stripe */}
@@ -104,7 +116,7 @@ export default function HomeScreen({ navigation }) {
                   </View>
                   <TouchableOpacity
                     style={styles.whereBtn}
-                    onPress={(e) => { e.stopPropagation?.(); navigation.navigate('Search'); }}
+                    onPress={(e) => { e.stopPropagation?.(); goToSearch(); }}
                   >
                     <Feather name="map-pin" size={12} color={colors.accent.persimmon} />
                     <Text style={styles.whereBtnText}>Where to catch</Text>
@@ -138,31 +150,31 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.dashGrid}>
           <TouchableOpacity style={[styles.dashCard, styles.dashCardLarge, { backgroundColor: colors.primary.forest }]}
-            onPress={() => navigation.navigate('Search')}>
+            onPress={goToSearch}>
             <Feather name="search" size={28} color={colors.accent.wasabi} />
             <Text style={[styles.dashLabel, { color: '#fff' }]}>Search & Fish</Text>
             <Text style={[styles.dashSub, { color: colors.accent.wasabi }]}>Find your spot</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#FFF3E0', borderColor: colors.accent.persimmon }]}
-            onPress={() => navigation.navigate('Journal')}>
+            onPress={goToJournal}>
             <Feather name="book-open" size={24} color={colors.accent.persimmon} />
             <Text style={[styles.dashLabel, { color: colors.accent.persimmon }]}>Journal</Text>
             <Text style={styles.dashSub}>Log catches</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E8F5E9', borderColor: colors.accent.wasabi }]}
-            onPress={() => navigation.navigate('Supplies')}>
+            onPress={goToSupplies}>
             <Feather name="shopping-cart" size={24} color={colors.primary.forest} />
             <Text style={[styles.dashLabel, { color: colors.primary.forest }]}>WI Gear</Text>
             <Text style={styles.dashSub}>Local brands</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E3F2FD', borderColor: colors.environment.riverBlue }]}
-            onPress={() => navigation.navigate('Weather')}>
+            onPress={goToWeather}>
             <Feather name="cloud" size={24} color={colors.environment.riverBlue} />
             <Text style={[styles.dashLabel, { color: colors.environment.riverBlue }]}>Forecast</Text>
-            <Text style={styles.dashSub}>3-day outlook</Text>
+            <Text style={styles.dashSub}>7-day outlook</Text>
           </TouchableOpacity>
         </View>
       </View>

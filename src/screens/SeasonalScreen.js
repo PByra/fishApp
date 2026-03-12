@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
@@ -11,6 +11,104 @@ const STATUS = {
 };
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── Memoized Fish Card ────────────────────────────────────────────────────────
+// Extracting as memo means only the 2 affected cards re-render when expanded changes,
+// not all 21 cards — critical for smooth animation on the Z Flip 3.
+const FishCard = memo(function FishCard({ item, isOpen, onToggle, cardRefs }) {
+  const s = STATUS[item.seasonStatus];
+  return (
+    <TouchableOpacity
+      ref={el => { if (cardRefs) cardRefs.current[item.fish] = el; }}
+      style={[styles.fishCard, { borderColor: s.border }, isOpen && styles.fishCardOpen]}
+      onPress={() => onToggle(item.fish)}
+      activeOpacity={0.85}
+    >
+      {/* Card header row */}
+      <View style={styles.cardHead}>
+        <View style={[styles.statusStripe, { backgroundColor: s.dot }]} />
+        <View style={styles.cardHeadContent}>
+          <View style={styles.cardTop}>
+            <Text style={styles.fishName}>{item.fish}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: s.bg, borderColor: s.border }]}>
+              <View style={[styles.statusDot, { backgroundColor: s.dot }]} />
+              <Text style={[styles.statusLabel, { color: s.text }]}>{s.label}</Text>
+            </View>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaChip}>📏 {item.depth}</Text>
+            <Text style={styles.metaChip}>⚖️ {item.avgSize}</Text>
+            <View style={[styles.diffChip, { backgroundColor: s.bg, borderColor: s.border }]}>
+              <Text style={[styles.diffText, { color: s.text }]}>{item.difficulty}</Text>
+            </View>
+          </View>
+        </View>
+        <Feather name={isOpen ? 'chevron-up' : 'chevron-down'} size={20} color={colors.neutral.gray400} />
+      </View>
+
+      {/* Expanded content */}
+      {isOpen && (
+        <View style={styles.expanded}>
+          {item.image ? (
+            <Image source={{ uri: item.image }} style={styles.fishPhoto} resizeMode="cover" />
+          ) : (
+            <View style={styles.photoPlaceholder}>
+              <Text style={styles.photoPlaceholderText}>🐟  No photo available</Text>
+            </View>
+          )}
+          <Text style={styles.photoCaption}>Field identification photo</Text>
+
+          <View style={styles.monthsRow}>
+            {MONTHS.map((m, i) => {
+              const active = item.seasonMonths.includes(i + 1);
+              const peak   = item.peakMonths.includes(i + 1);
+              return (
+                <View key={i} style={[styles.monthCell, active && styles.monthCellActive, peak && styles.monthCellPeak]}>
+                  <Text style={[styles.monthText, active && styles.monthTextActive, peak && styles.monthTextPeak]}>
+                    {m}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+          <Text style={styles.monthLegend}>
+            <Text style={{ color: '#4CAF50' }}>■</Text>{'  In season  '}
+            <Text style={{ color: colors.accent.persimmon }}>■</Text>{'  Peak'}
+          </Text>
+
+          <View style={styles.detailGrid}>
+            <View style={styles.detailBox}>
+              <Text style={styles.detailLabel}>RECORD SIZE</Text>
+              <Text style={styles.detailValue}>{item.recordSize}</Text>
+            </View>
+            <View style={styles.detailBox}>
+              <Text style={styles.detailLabel}>DEPTH</Text>
+              <Text style={styles.detailValue}>{item.depth}</Text>
+            </View>
+          </View>
+
+          {item.recommendedGear?.length > 0 && (
+            <View style={styles.gearBox}>
+              <Text style={styles.gearBoxTitle}>🎣 Recommended Gear</Text>
+              <View style={styles.gearWrap}>
+                {item.recommendedGear.map((g, i) => (
+                  <View key={i} style={styles.gearTag}>
+                    <Text style={styles.gearTagText}>{g}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <View style={styles.tipsBox}>
+            <Feather name="zap" size={14} color={colors.accent.persimmon} />
+            <Text style={styles.tipsText}>{item.tips}</Text>
+          </View>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+});
 
 export default function SeasonalScreen({ route }) {
   const [fish, setFish] = useState([]);
@@ -26,7 +124,6 @@ export default function SeasonalScreen({ route }) {
     if (!openFish || fish.length === 0) return;
     setFilter('all');
     setExpanded(openFish);
-    // Scroll to the card after a short delay to let layout settle
     setTimeout(() => {
       const ref = cardRefs.current[openFish];
       if (ref && scrollRef.current) {
@@ -38,6 +135,10 @@ export default function SeasonalScreen({ route }) {
       }
     }, 350);
   }, [route?.params?.openFish, fish]);
+
+  const handleToggle = useCallback((fishName) => {
+    setExpanded(prev => prev === fishName ? null : fishName);
+  }, []);
 
   const inSeasonCount = fish.filter(f => f.seasonStatus === 2).length;
   const upcomingCount = fish.filter(f => f.seasonStatus === 1).length;
@@ -88,112 +189,15 @@ export default function SeasonalScreen({ route }) {
 
       {/* ── LIST ────────────────────────────────────────────── */}
       <ScrollView ref={scrollRef} style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {displayed.map((item, idx) => {
-          const s = STATUS[item.seasonStatus];
-          const open = expanded === item.fish;
-          return (
-            <TouchableOpacity key={item.fish}
-              ref={el => { cardRefs.current[item.fish] = el; }}
-              style={[styles.fishCard, { borderColor: s.border }, open && styles.fishCardOpen]}
-              onPress={() => setExpanded(open ? null : item.fish)}
-              activeOpacity={0.85}>
-
-              {/* Card header row */}
-              <View style={styles.cardHead}>
-                <View style={[styles.statusStripe, { backgroundColor: s.dot }]} />
-                <View style={styles.cardHeadContent}>
-                  <View style={styles.cardTop}>
-                    <Text style={styles.fishName}>{item.fish}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: s.bg, borderColor: s.border }]}>
-                      <View style={[styles.statusDot, { backgroundColor: s.dot }]} />
-                      <Text style={[styles.statusLabel, { color: s.text }]}>{s.label}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaChip}>📏 {item.depth}</Text>
-                    <Text style={styles.metaChip}>⚖️ {item.avgSize}</Text>
-                    <View style={[styles.diffChip, { backgroundColor: s.bg, borderColor: s.border }]}>
-                      <Text style={[styles.diffText, { color: s.text }]}>{item.difficulty}</Text>
-                    </View>
-                  </View>
-                </View>
-                <Feather name={open ? 'chevron-up' : 'chevron-down'} size={20} color={colors.neutral.gray400} />
-              </View>
-
-              {/* Expanded */}
-              {open && (
-                <View style={styles.expanded}>
-
-                  {/* Field ID photo */}
-                  {item.image ? (
-                    <Image source={{ uri: item.image }} style={styles.fishPhoto} resizeMode="cover" />
-                  ) : (
-                    <View style={styles.photoPlaceholder}>
-                      <Text style={styles.photoPlaceholderText}>🐟  No photo available</Text>
-                    </View>
-                  )}
-                  <Text style={styles.photoCaption}>Field identification photo</Text>
-
-                  {/* Month calendar strip */}
-                  <View style={styles.monthsRow}>
-                    {MONTHS.map((m, i) => {
-                      const active = item.seasonMonths.includes(i + 1);
-                      const peak   = item.peakMonths.includes(i + 1);
-                      return (
-                        <View key={i} style={[
-                          styles.monthCell,
-                          active && styles.monthCellActive,
-                          peak   && styles.monthCellPeak,
-                        ]}>
-                          <Text style={[styles.monthText, active && styles.monthTextActive, peak && styles.monthTextPeak]}>
-                            {m}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                  <Text style={styles.monthLegend}>
-                    <Text style={{ color: '#4CAF50' }}>■</Text>{'  In season  '}
-                    <Text style={{ color: colors.accent.persimmon }}>■</Text>{'  Peak'}
-                  </Text>
-
-                  {/* Stats grid */}
-                  <View style={styles.detailGrid}>
-                    <View style={styles.detailBox}>
-                      <Text style={styles.detailLabel}>RECORD SIZE</Text>
-                      <Text style={styles.detailValue}>{item.recordSize}</Text>
-                    </View>
-                    <View style={styles.detailBox}>
-                      <Text style={styles.detailLabel}>DEPTH</Text>
-                      <Text style={styles.detailValue}>{item.depth}</Text>
-                    </View>
-                  </View>
-
-                  {/* Gear */}
-                  {item.recommendedGear?.length > 0 && (
-                    <View style={styles.gearBox}>
-                      <Text style={styles.gearBoxTitle}>🎣 Recommended Gear</Text>
-                      <View style={styles.gearWrap}>
-                        {item.recommendedGear.map((g, i) => (
-                          <View key={i} style={styles.gearTag}>
-                            <Text style={styles.gearTagText}>{g}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Tips */}
-                  <View style={styles.tipsBox}>
-                    <Feather name="zap" size={14} color={colors.accent.persimmon} />
-                    <Text style={styles.tipsText}>{item.tips}</Text>
-                  </View>
-
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
+        {displayed.map((item) => (
+          <FishCard
+            key={item.fish}
+            item={item}
+            isOpen={expanded === item.fish}
+            onToggle={handleToggle}
+            cardRefs={cardRefs}
+          />
+        ))}
 
         <View style={styles.dnrBox}>
           <Feather name="alert-circle" size={16} color={colors.accent.persimmon} />

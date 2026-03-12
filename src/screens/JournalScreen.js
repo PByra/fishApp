@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  FlatList,
   ScrollView,
   TouchableOpacity,
   TextInput,
   Image,
   Alert,
   Modal,
-  Platform,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, spacing, shadows, typography } from '../theme/colors';
@@ -28,6 +28,68 @@ function formatDate(isoString) {
   const d = new Date(isoString);
   return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
+
+// ── Memoized entry card ────────────────────────────────────────────────────
+// Prevents all cards from re-rendering when one expands/collapses
+const EntryCard = memo(function EntryCard({ entry, isExpanded, onToggle, onDelete }) {
+  return (
+    <TouchableOpacity
+      style={styles.entryCard}
+      onPress={() => onToggle(entry.id)}
+      activeOpacity={0.85}
+    >
+      <View style={styles.entryHeader}>
+        <View style={styles.entryHeaderLeft}>
+          <Text style={styles.entryFish}>{entry.fishSpecies}</Text>
+          <View style={styles.entryMeta}>
+            <Feather name="map-pin" size={12} color={colors.neutral.textSecondary} />
+            <Text style={styles.entryLocation}>{entry.location}</Text>
+          </View>
+          <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
+        </View>
+        {entry.photoUri ? (
+          <Image source={{ uri: entry.photoUri }} style={styles.entryThumb} />
+        ) : (
+          <View style={styles.noPhotoThumb}>
+            <Text style={styles.noPhotoIcon}>🐟</Text>
+          </View>
+        )}
+      </View>
+
+      {isExpanded && (
+        <View style={styles.entryExpanded}>
+          {entry.photoUri && (
+            <Image source={{ uri: entry.photoUri }} style={styles.entryPhoto} resizeMode="cover" />
+          )}
+          {entry.gearUsed ? (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>GEAR USED</Text>
+              <Text style={styles.detailValue}>{entry.gearUsed}</Text>
+            </View>
+          ) : null}
+          {entry.notes ? (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>NOTES</Text>
+              <Text style={styles.detailValue}>{entry.notes}</Text>
+            </View>
+          ) : null}
+          <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(entry.id)}>
+            <Feather name="trash-2" size={14} color={colors.accent.persimmon} />
+            <Text style={styles.deleteBtnText}>Delete Entry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+});
+
+const EmptyState = () => (
+  <View style={styles.emptyState}>
+    <Text style={styles.emptyIcon}>🎣</Text>
+    <Text style={styles.emptyTitle}>No catches yet</Text>
+    <Text style={styles.emptySubtitle}>Tap the + button to log your first catch</Text>
+  </View>
+);
 
 export default function JournalScreen() {
   const [entries, setEntries] = useState([]);
@@ -121,7 +183,11 @@ export default function JournalScreen() {
     await refresh();
   };
 
-  const handleDelete = (id) => {
+  const handleToggleEntry = useCallback((id) => {
+    setExpandedEntry(prev => prev === id ? null : id);
+  }, []);
+
+  const handleDelete = useCallback((id) => {
     Alert.alert('Delete Entry', 'Remove this catch from your journal?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -130,20 +196,20 @@ export default function JournalScreen() {
         onPress: async () => {
           await deleteEntry(id);
           await refresh();
-          if (expandedEntry === id) setExpandedEntry(null);
+          setExpandedEntry(prev => prev === id ? null : prev);
         },
       },
     ]);
-  };
+  }, [refresh]);
 
-  const openModal = () => {
+  const openModal = useCallback(() => {
     setFormFish('');
     setFormLocation('');
     setFormGear('');
     setFormNotes('');
     setFormPhotoUri(null);
     setShowModal(true);
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -159,70 +225,25 @@ export default function JournalScreen() {
       </View>
 
       {/* ── ENTRY LIST ── */}
-      <ScrollView
-        style={styles.scroll}
+      <FlatList
+        data={entries}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <EntryCard
+            entry={item}
+            isExpanded={expandedEntry === item.id}
+            onToggle={handleToggleEntry}
+            onDelete={handleDelete}
+          />
+        )}
+        ListEmptyComponent={<EmptyState />}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      >
-        {entries.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🎣</Text>
-            <Text style={styles.emptyTitle}>No catches yet</Text>
-            <Text style={styles.emptySubtitle}>Tap the + button to log your first catch</Text>
-          </View>
-        )}
-
-        {entries.map((entry) => (
-          <TouchableOpacity
-            key={entry.id}
-            style={styles.entryCard}
-            onPress={() => setExpandedEntry(expandedEntry === entry.id ? null : entry.id)}
-            activeOpacity={0.85}
-          >
-            <View style={styles.entryHeader}>
-              <View style={styles.entryHeaderLeft}>
-                <Text style={styles.entryFish}>{entry.fishSpecies}</Text>
-                <View style={styles.entryMeta}>
-                  <Feather name="map-pin" size={12} color={colors.neutral.textSecondary} />
-                  <Text style={styles.entryLocation}>{entry.location}</Text>
-                </View>
-                <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
-              </View>
-              {entry.photoUri ? (
-                <Image source={{ uri: entry.photoUri }} style={styles.entryThumb} />
-              ) : (
-                <View style={styles.noPhotoThumb}>
-                  <Text style={styles.noPhotoIcon}>🐟</Text>
-                </View>
-              )}
-            </View>
-
-            {expandedEntry === entry.id && (
-              <View style={styles.entryExpanded}>
-                {entry.photoUri && (
-                  <Image source={{ uri: entry.photoUri }} style={styles.entryPhoto} resizeMode="cover" />
-                )}
-                {entry.gearUsed ? (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>GEAR USED</Text>
-                    <Text style={styles.detailValue}>{entry.gearUsed}</Text>
-                  </View>
-                ) : null}
-                {entry.notes ? (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>NOTES</Text>
-                    <Text style={styles.detailValue}>{entry.notes}</Text>
-                  </View>
-                ) : null}
-                <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(entry.id)}>
-                  <Feather name="trash-2" size={14} color={colors.accent.persimmon} />
-                  <Text style={styles.deleteBtnText}>Delete Entry</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+        style={styles.scroll}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+      />
 
       {/* ── ADD ENTRY MODAL ── */}
       <Modal
