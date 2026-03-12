@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { FORECAST as STATIC_FORECAST } from '../data/weatherData';
-import { fetchMilwaukeeWeather } from '../services/weatherService';
+import { fetchWeather } from '../services/weatherService';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
 // ─── Wally Walleye's Quip Bank ───────────────────────────────────────────────
@@ -273,14 +274,30 @@ const barStyles = StyleSheet.create({
 
 export default function WeatherScreen() {
   const [forecast, setForecast] = useState(STATIC_FORECAST);
+  const [locationName, setLocationName] = useState('Milwaukee, WI');
   const today = forecast[0];
   const wallyQuip = useMemo(() => getWallyQuip(today.fishing), [today.fishing]);
   const [useCelsius, setUseCelsius] = useState(false);
 
   useEffect(() => {
-    fetchMilwaukeeWeather()
-      .then(setForecast)
-      .catch(() => {}); // silently keep static fallback on failure
+    (async () => {
+      let lat = 43.0389, lng = -87.9065, name = 'Milwaukee, WI';
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+          const geo = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+          if (geo[0]) {
+            const { city, region } = geo[0];
+            name = [city, region].filter(Boolean).join(', ');
+          }
+        }
+      } catch {}
+      setLocationName(name);
+      fetchWeather(lat, lng).then(setForecast).catch(() => {});
+    })();
   }, []);
   const fmt = (f) => useCelsius ? String(Math.round((f - 32) * 5 / 9)) : String(f);
   const unit = useCelsius ? '°C' : '°F';
@@ -297,7 +314,7 @@ export default function WeatherScreen() {
         <View style={styles.heroTop}>
           <View style={styles.heroLeft}>
             <View style={styles.heroLocationRow}>
-              <Text style={styles.heroLocation}>📍 Milwaukee, WI</Text>
+              <Text style={styles.heroLocation}>📍 {locationName}</Text>
               <TouchableOpacity style={styles.unitBtn} onPress={() => setUseCelsius(c => !c)}>
                 <Text style={styles.unitBtnText}>{useCelsius ? '°F' : '°C'}</Text>
               </TouchableOpacity>
@@ -463,7 +480,7 @@ export default function WeatherScreen() {
       <View style={styles.noteCard}>
         <Feather name="alert-circle" size={14} color={colors.environment.riverBlue} />
         <Text style={styles.noteText}>
-          Illustrative forecast for Milwaukee, WI. Check weather.gov or NOAA Marine before heading out.
+          Live forecast for {locationName}. Check weather.gov or NOAA Marine before heading out.
         </Text>
       </View>
 

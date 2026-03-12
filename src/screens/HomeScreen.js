@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
+import * as Location from 'expo-location';
 import { TODAY as TODAY_STATIC } from '../data/weatherData';
-import { fetchMilwaukeeWeather } from '../services/weatherService';
+import { fetchWeather } from '../services/weatherService';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
 const GEAR_EMOJI = (gear) => {
@@ -20,12 +21,28 @@ const GEAR_EMOJI = (gear) => {
 export default function HomeScreen({ navigation }) {
   const [inSeasonFish, setInSeasonFish] = useState([]);
   const [today, setToday] = useState(TODAY_STATIC);
+  const [locationName, setLocationName] = useState('Milwaukee, WI');
 
   useEffect(() => {
     setInSeasonFish(getCurrentInSeasonFish());
-    fetchMilwaukeeWeather()
-      .then(f => setToday(f[0]))
-      .catch(() => {}); // silently keep static fallback on failure
+    (async () => {
+      let lat = 43.0389, lng = -87.9065, name = 'Milwaukee, WI';
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+          const geo = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+          if (geo[0]) {
+            const { city, region } = geo[0];
+            name = [city, region].filter(Boolean).join(', ');
+          }
+        }
+      } catch {}
+      setLocationName(name);
+      fetchWeather(lat, lng).then(f => setToday(f[0])).catch(() => {});
+    })();
   }, []);
 
   const topInSeason = useMemo(
@@ -49,7 +66,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.weatherHero}>
         <View style={styles.weatherTop}>
           <View>
-            <Text style={styles.locationLabel}>📍 Milwaukee, WI</Text>
+            <Text style={styles.locationLabel}>📍 {locationName}</Text>
             <Text style={styles.tempText}>{today.high}°F</Text>
             <Text style={styles.conditionText}>{today.condition}</Text>
           </View>

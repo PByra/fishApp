@@ -3,8 +3,8 @@
  * Returns a 7-day FORECAST array in the same shape used by WeatherScreen/HomeScreen.
  */
 
-const LAT = 43.0389;
-const LNG = -87.9065;
+const DEFAULT_LAT = 43.0389;
+const DEFAULT_LNG = -87.9065;
 
 // WMO Weather Interpretation Codes → display values
 const WMO = {
@@ -53,10 +53,10 @@ const MONS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'
 
 const degToDir = (deg) => DIRS[Math.round((deg % 360) / 45) % 8];
 
-export async function fetchMilwaukeeWeather() {
+export async function fetchWeather(lat = DEFAULT_LAT, lng = DEFAULT_LNG) {
   const params = [
-    `latitude=${LAT}`,
-    `longitude=${LNG}`,
+    `latitude=${lat}`,
+    `longitude=${lng}`,
     'daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,wind_speed_10m_max,wind_direction_10m_dominant,relative_humidity_2m_mean',
     'wind_speed_unit=mph',
     'temperature_unit=fahrenheit',
