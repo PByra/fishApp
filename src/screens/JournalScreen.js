@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 12,
-    backgroundColor: '#F0F7F4',
+    backgroundColor: '#EEF2EA',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.neutral.borderLight,
   },
   speciesItemActive: {
-    backgroundColor: '#F0F7F4',
+    backgroundColor: '#EEF2EA',
   },
   speciesText: {
     fontSize: typography.body.fontSize,

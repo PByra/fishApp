@@ -258,7 +258,7 @@ export default function SuppliesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#EDEBE4' },
+  container: { flex: 1, backgroundColor: '#E8E0CC' },
 
   header: {
     backgroundColor: colors.primary.forest,

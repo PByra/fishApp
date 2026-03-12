@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
 import { colors, spacing, shadows, typography } from '../theme/colors';
@@ -49,15 +49,6 @@ const FishCard = memo(function FishCard({ item, isOpen, onToggle, cardRefs }) {
       {/* Expanded content */}
       {isOpen && (
         <View style={styles.expanded}>
-          {item.image ? (
-            <Image source={{ uri: item.image }} style={styles.fishPhoto} resizeMode="cover" />
-          ) : (
-            <View style={styles.photoPlaceholder}>
-              <Text style={styles.photoPlaceholderText}>🐟  No photo available</Text>
-            </View>
-          )}
-          <Text style={styles.photoCaption}>Field identification photo</Text>
-
           <View style={styles.monthsRow}>
             {MONTHS.map((m, i) => {
               const active = item.seasonMonths.includes(i + 1);
@@ -211,7 +202,7 @@ export default function SeasonalScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#EDEBE4' },
+  container: { flex: 1, backgroundColor: '#E8E0CC' },
 
   header: {
     backgroundColor: colors.primary.forest,
@@ -247,7 +238,7 @@ const styles = StyleSheet.create({
 
   filterRow: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFDF6',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: spacing.sm,
@@ -259,7 +250,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#F0EDE6',
+    backgroundColor: '#EDE5D6',
   },
   filterTabActive: { backgroundColor: colors.primary.forest },
   filterTabText: { fontSize: 12, fontWeight: '700', color: colors.neutral.textSecondary },
@@ -269,7 +260,7 @@ const styles = StyleSheet.create({
   scrollContent: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
 
   fishCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFDF6',
     borderRadius: 18,
     borderWidth: 1.5,
     overflow: 'hidden',
@@ -314,7 +305,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: colors.neutral.textSecondary,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#EDE5D6',
     borderRadius: 6,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
@@ -334,36 +325,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
 
-  fishPhoto: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    backgroundColor: '#E0E0E0',
-  },
-  photoPlaceholder: {
-    width: '100%',
-    height: 90,
-    borderRadius: 12,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.neutral.borderLight,
-    borderStyle: 'dashed',
-  },
-  photoPlaceholderText: {
-    fontSize: typography.body.fontSize,
-    color: colors.neutral.textSecondary,
-    fontWeight: '500',
-  },
-  photoCaption: {
-    fontSize: 11,
-    color: colors.neutral.textSecondary,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: -spacing.sm,
-  },
-
   monthsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   monthCell: {
     flex: 1,
@@ -371,7 +332,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 5,
     alignItems: 'center',
-    backgroundColor: '#F0EDE6',
+    backgroundColor: '#EDE5D6',
   },
   monthCellActive: { backgroundColor: '#C8E6C9' },
   monthCellPeak:   { backgroundColor: colors.accent.persimmon },
@@ -388,7 +349,7 @@ const styles = StyleSheet.create({
   detailGrid: { flexDirection: 'row', gap: spacing.md },
   detailBox: {
     flex: 1,
-    backgroundColor: '#F5F8F5',
+    backgroundColor: '#EEF2EA',
     borderRadius: 10,
     padding: spacing.md,
     borderLeftWidth: 3,
@@ -409,7 +370,7 @@ const styles = StyleSheet.create({
   },
 
   gearBox: {
-    backgroundColor: '#FFF5F2',
+    backgroundColor: '#F9EDE4',
     borderRadius: 12,
     padding: spacing.md,
     borderLeftWidth: 3,
@@ -423,9 +384,9 @@ const styles = StyleSheet.create({
   },
   gearWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   gearTag: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFDF6',
     borderWidth: 1,
-    borderColor: '#FFCCBC',
+    borderColor: '#DDB898',
     borderRadius: 10,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,
@@ -439,7 +400,7 @@ const styles = StyleSheet.create({
   tipsBox: {
     flexDirection: 'row',
     gap: spacing.sm,
-    backgroundColor: '#F5F8F5',
+    backgroundColor: '#EEF2EA',
     borderRadius: 10,
     padding: spacing.md,
     alignItems: 'flex-start',
@@ -457,7 +418,7 @@ const styles = StyleSheet.create({
   dnrBox: {
     flexDirection: 'row',
     gap: spacing.md,
-    backgroundColor: '#FFF5F2',
+    backgroundColor: '#F9EDE4',
     borderRadius: 12,
     padding: spacing.md,
     alignItems: 'flex-start',

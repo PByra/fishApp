@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
+import { TODAY } from '../data/weatherData';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
 const GEAR_EMOJI = (gear) => {
@@ -13,16 +14,6 @@ const GEAR_EMOJI = (gear) => {
   if (/net/i.test(gear)) return '🥅';
   if (/downrigger|trolling/i.test(gear)) return '⚓';
   return '📦';
-};
-
-const WEATHER = {
-  location: 'Milwaukee, WI',
-  temperature: 58,
-  condition: 'Partly Cloudy',
-  windSpeed: 12,
-  humidity: 65,
-  fishingCondition: 'Good',
-  emoji: '⛅',
 };
 
 export default function HomeScreen({ navigation }) {
@@ -53,29 +44,29 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.weatherHero}>
         <View style={styles.weatherTop}>
           <View>
-            <Text style={styles.locationLabel}>📍 {WEATHER.location}</Text>
-            <Text style={styles.tempText}>{WEATHER.temperature}°F</Text>
-            <Text style={styles.conditionText}>{WEATHER.condition}</Text>
+            <Text style={styles.locationLabel}>📍 Milwaukee, WI</Text>
+            <Text style={styles.tempText}>{TODAY.high}°F</Text>
+            <Text style={styles.conditionText}>{TODAY.condition}</Text>
           </View>
           <View style={styles.weatherRight}>
-            <Text style={styles.weatherBigEmoji}>{WEATHER.emoji}</Text>
+            <Text style={styles.weatherBigEmoji}>{TODAY.emoji}</Text>
             <View style={styles.weatherPills}>
               <View style={styles.weatherPill}>
                 <Feather name="wind" size={12} color={colors.accent.wasabi} />
-                <Text style={styles.weatherPillText}>{WEATHER.windSpeed} mph</Text>
+                <Text style={styles.weatherPillText}>{TODAY.wind} mph</Text>
               </View>
               <View style={styles.weatherPill}>
                 <Feather name="droplet" size={12} color={colors.accent.wasabi} />
-                <Text style={styles.weatherPillText}>{WEATHER.humidity}%</Text>
+                <Text style={styles.weatherPillText}>{TODAY.humidity}%</Text>
               </View>
             </View>
           </View>
         </View>
 
         <View style={styles.conditionBar}>
-          <View style={styles.conditionDot} />
+          <View style={[styles.conditionDot, { backgroundColor: TODAY.fishingColor }]} />
           <Text style={styles.conditionBarText}>
-            Fishing: <Text style={styles.conditionBarStatus}>{WEATHER.fishingCondition}</Text>
+            Fishing: <Text style={[styles.conditionBarStatus, { color: TODAY.fishingColor }]}>{TODAY.fishing}</Text>
           </Text>
           <TouchableOpacity onPress={goToWeather} style={styles.forecastBtn}>
             <Text style={styles.forecastBtnText}>Full Forecast</Text>
@@ -156,21 +147,21 @@ export default function HomeScreen({ navigation }) {
             <Text style={[styles.dashSub, { color: colors.accent.wasabi }]}>Find your spot</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#FFF3E0', borderColor: colors.accent.persimmon }]}
+          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#F7EDDE', borderColor: colors.accent.persimmon }]}
             onPress={goToJournal}>
             <Feather name="book-open" size={24} color={colors.accent.persimmon} />
             <Text style={[styles.dashLabel, { color: colors.accent.persimmon }]}>Journal</Text>
             <Text style={styles.dashSub}>Log catches</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E8F5E9', borderColor: colors.accent.wasabi }]}
+          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E8EFE4', borderColor: colors.accent.wasabi }]}
             onPress={goToSupplies}>
             <Feather name="shopping-cart" size={24} color={colors.primary.forest} />
             <Text style={[styles.dashLabel, { color: colors.primary.forest }]}>WI Gear</Text>
             <Text style={styles.dashSub}>Local brands</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E3F2FD', borderColor: colors.environment.riverBlue }]}
+          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E4EEF7', borderColor: colors.environment.riverBlue }]}
             onPress={goToWeather}>
             <Feather name="cloud" size={24} color={colors.environment.riverBlue} />
             <Text style={[styles.dashLabel, { color: colors.environment.riverBlue }]}>Forecast</Text>
@@ -182,16 +173,26 @@ export default function HomeScreen({ navigation }) {
       {/* ══ REMINDERS ═════════════════════════════════════════ */}
       <View style={styles.section}>
         <View style={styles.reminderCard}>
-          <View style={[styles.reminderIcon, { backgroundColor: '#E3F2FD' }]}>
-            <Feather name="alert-circle" size={18} color="#01579B" />
+          <View style={[styles.reminderIcon, { backgroundColor: '#E4EEF7' }]}>
+            <Feather name="alert-circle" size={18} color={colors.environment.riverBlue} />
           </View>
-          <Text style={styles.reminderText}>Wisconsin fishing license required for all anglers</Text>
+          <Text style={styles.reminderText}>Wisconsin fishing license required for all anglers 16+</Text>
         </View>
-        <View style={styles.reminderCard}>
-          <View style={[styles.reminderIcon, { backgroundColor: '#FBE9E7' }]}>
-            <Feather name="info" size={18} color="#E65100" />
+        <TouchableOpacity
+          style={styles.reminderCard}
+          onPress={() => Linking.openURL('https://dnr.wisconsin.gov/topic/fishing/regulations')}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.reminderIcon, { backgroundColor: '#F7EDDE' }]}>
+            <Feather name="external-link" size={18} color={colors.accent.persimmon} />
           </View>
-          <Text style={styles.reminderText}>Check DNR for current season dates and bag limits</Text>
+          <Text style={styles.reminderText}>WI Fishing Regulations — tap to open DNR site</Text>
+        </TouchableOpacity>
+        <View style={styles.reminderCard}>
+          <View style={[styles.reminderIcon, { backgroundColor: '#EEF2EA' }]}>
+            <Text style={{ fontSize: 18 }}>🎣</Text>
+          </View>
+          <Text style={styles.reminderText}>State fish: Muskellunge (Musky) — designated 1955</Text>
         </View>
       </View>
 
@@ -200,7 +201,7 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#EDEBE4' },
+  container: { flex: 1, backgroundColor: '#E8E0CC' },
   content: { paddingBottom: spacing.xl },
 
   // Weather Hero
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
   // Fish cards
   fishCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFDF6',
     borderRadius: 16,
     marginBottom: spacing.md,
     overflow: 'hidden',
@@ -346,12 +347,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFF5F2',
+    backgroundColor: '#F9EDE4',
     borderRadius: 8,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#FFCCBC',
+    borderColor: '#DDB898',
   },
   whereBtnText: {
     fontSize: 11,
@@ -368,12 +369,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F5F8F5',
+    backgroundColor: '#EEF2EA',
     borderRadius: 8,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: '#D4E8D0',
+    borderColor: '#C8D8C0',
   },
   gearPillEmoji: { fontSize: 12 },
   gearPillText: {
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
   reminderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFDF6',
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.sm,

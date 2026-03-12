@@ -1,26 +1,26 @@
-// Modern Wilderness Color Palette
-// Inspired by YETI, Sitka, Simms outdoor brands
+// Lodge & Lake Color Palette
+// Inspired by Bass Pro Shops, Cabela's, Sitka, YETI — Wisconsin wilderness aesthetic
 
 export const colors = {
-  // Primary Brand Colors - Deep Forest & Lake
+  // Primary Brand Colors — Deep Lodge Green
   primary: {
-    forest: '#3B4B48',      // Narragansett Green - Headers & Primary UI
-    darkForest: '#2A3432',  // Darker accent
-    lightForest: '#4A5A57', // Lighter variant
+    forest: '#1E3A22',      // Deep lodge green — headers & primary UI
+    darkForest: '#122015',  // Near-black green — dark accents
+    lightForest: '#2D5232', // Mid forest — lighter variant
   },
 
-  // Secondary Colors
+  // Secondary Colors — Earth & Bark
   secondary: {
-    slateGray: '#5A6D6A',   // Cards & backgrounds
-    lightSlate: '#7A8D8A',  // Secondary text
-    paleSilt: '#D4DED9',    // Light backgrounds
+    slateGray: '#4A5A4C',   // Muted forest mid-tone
+    lightSlate: '#6A7A6C',  // Secondary text
+    paleSilt: '#C8C0A8',    // Light warm neutral
   },
 
-  // Action Colors - High Visibility
+  // Action Colors — Aged Brass & Burnt Copper
   accent: {
-    persimmon: '#EC5840',   // Primary CTA (Navigate button)
-    wasabi: '#A8C69F',      // Secondary CTA
-    darkOrange: '#D43F2B',  // Hover state
+    persimmon: '#C84B18',   // Burnt copper/ember — primary CTA
+    wasabi: '#C4A054',      // Aged brass/honey gold — secondary CTA
+    darkOrange: '#A33A12',  // Deep ember — hover state
   },
 
   // Functional Colors
@@ -31,18 +31,18 @@ export const colors = {
     info: '#2196F3',        // Information
   },
 
-  // Neutral
+  // Neutral — Warm Parchment & Leather
   neutral: {
     white: '#FFFFFF',
-    black: '#1A1A1A',
-    gray100: '#F5F5F5',
-    gray200: '#E8E8E8',
-    gray300: '#D0D0D0',
-    gray400: '#9E9E9E',
-    gray500: '#757575',
-    lightGray: '#F5F1E8',      // Light background
-    textSecondary: '#666666',  // Secondary text
-    borderLight: '#E0D7CE',    // Light border
+    black: '#1A1201',
+    gray100: '#F5F0E6',     // Warm cream
+    gray200: '#EDE5D6',     // Kraft paper
+    gray300: '#D6CBBA',     // Warm mid-tone
+    gray400: '#9E8E7A',     // Warm gray
+    gray500: '#6E5E4A',     // Leather brown-gray
+    lightGray: '#F0E8D6',   // Warm parchment — list backgrounds
+    textSecondary: '#6B5A44', // Warm leather text
+    borderLight: '#D6CAB0', // Warm tan border
   },
 
   // Status Colors
@@ -54,10 +54,10 @@ export const colors = {
 
   // Water & Environment
   environment: {
-    water: '#1B3A52',       // Deep water
-    lightWater: '#4A7BA7',  // Light water
-    riverBlue: '#2E5F8F',   // River water
-    sunset: '#FF6B35',      // Golden hour
+    water: '#152840',       // Deep lake water
+    lightWater: '#2A5C8A',  // Lake surface blue
+    riverBlue: '#1E4D7A',   // River water
+    sunset: '#D4641A',      // Golden hour
   },
 
   // Glassmorphism
@@ -81,17 +81,15 @@ export const spacing = {
 export const borderRadius = {
   sm: 8,
   md: 16,
-  lg: 24,     // Bento cards
+  lg: 24,
   xl: 32,
   full: 9999,
 };
 
 export const typography = {
-  // Font families
   fontFamily: {
     sans: 'Roboto, Inter, -apple-system, sans-serif',
   },
-  // Font sizes
   sizes: {
     xs: 12,
     sm: 14,
@@ -102,7 +100,6 @@ export const typography = {
     '3xl': 32,
     '4xl': 40,
   },
-  // Font weights
   weights: {
     light: 300,
     normal: 400,
@@ -111,13 +108,11 @@ export const typography = {
     bold: 700,
     extrabold: 800,
   },
-  // Line heights
   lineHeights: {
     tight: 1.2,
     normal: 1.5,
     relaxed: 1.75,
   },
-  // Named text styles (fontSize + size both provided for compatibility)
   heading: {
     fontSize: 24,
     size: 24,
@@ -155,43 +150,43 @@ export const shadows = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.07,
+    shadowRadius: 3,
     elevation: 2,
   },
   md: {
-    shadowColor: '#000',
+    shadowColor: '#1A1201',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#000',
+    shadowColor: '#1A1201',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
+    shadowOpacity: 0.15,
+    shadowRadius: 18,
     elevation: 8,
   },
   xl: {
-    shadowColor: '#000',
+    shadowColor: '#1A1201',
     shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.15,
-    shadowRadius: 25,
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
     elevation: 12,
   },
   elevated: {
-    shadowColor: '#000',
+    shadowColor: '#1A1201',
     shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.2,
-    shadowRadius: 35,
+    shadowOpacity: 0.22,
+    shadowRadius: 38,
     elevation: 16,
   },
 };
 
 export const touchTargets = {
   small: 40,
-  medium: 48,   // Minimum recommended
+  medium: 48,
   large: 56,
-  touch: 64,    // Extra large for gloved hands
+  touch: 64,
 };
