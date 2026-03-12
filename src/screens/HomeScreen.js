@@ -50,28 +50,28 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.weatherTop}>
           <View>
             <Text style={styles.locationLabel}>📍 Milwaukee, WI</Text>
-            <Text style={styles.tempText}>{TODAY.high}°F</Text>
-            <Text style={styles.conditionText}>{TODAY.condition}</Text>
+            <Text style={styles.tempText}>{today.high}°F</Text>
+            <Text style={styles.conditionText}>{today.condition}</Text>
           </View>
           <View style={styles.weatherRight}>
-            <Text style={styles.weatherBigEmoji}>{TODAY.emoji}</Text>
+            <Text style={styles.weatherBigEmoji}>{today.emoji}</Text>
             <View style={styles.weatherPills}>
               <View style={styles.weatherPill}>
                 <Feather name="wind" size={12} color={colors.accent.wasabi} />
-                <Text style={styles.weatherPillText}>{TODAY.wind} mph</Text>
+                <Text style={styles.weatherPillText}>{today.wind} mph</Text>
               </View>
               <View style={styles.weatherPill}>
                 <Feather name="droplet" size={12} color={colors.accent.wasabi} />
-                <Text style={styles.weatherPillText}>{TODAY.humidity}%</Text>
+                <Text style={styles.weatherPillText}>{today.humidity}%</Text>
               </View>
             </View>
           </View>
         </View>
 
         <View style={styles.conditionBar}>
-          <View style={[styles.conditionDot, { backgroundColor: TODAY.fishingColor }]} />
+          <View style={[styles.conditionDot, { backgroundColor: today.fishingColor }]} />
           <Text style={styles.conditionBarText}>
-            Fishing: <Text style={[styles.conditionBarStatus, { color: TODAY.fishingColor }]}>{TODAY.fishing}</Text>
+            Fishing: <Text style={[styles.conditionBarStatus, { color: today.fishingColor }]}>{today.fishing}</Text>
           </Text>
           <TouchableOpacity onPress={goToWeather} style={styles.forecastBtn}>
             <Text style={styles.forecastBtnText}>Full Forecast</Text>
