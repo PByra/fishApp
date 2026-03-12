@@ -437,7 +437,7 @@ export default function WeatherScreen() {
               label: 'Trout & Salmon Regs',
               sub: 'Trout stream maps, special rules',
               icon: 'map',
-              url: 'https://dnr.wisconsin.gov/topic/fishing/troutregs',
+              url: 'https://dnr.wisconsin.gov/topic/Fishing/trout/index',
             },
           ].map((link, i, arr) => (
             <TouchableOpacity
