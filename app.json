@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Wisconsin Fishing App",
+    "name": "Badger State Bite Book",
     "slug": "wisconsin-fishing-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,7 @@
       "**/*"
     ],
     "ios": {
-      "supportsTabletMode": true
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -39,6 +39,11 @@
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "09210c5c-398c-479c-97af-466e2e12c74c"
+      }
+    }
   }
 }
