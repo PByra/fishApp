@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
 import * as Location from 'expo-location';
@@ -19,6 +20,7 @@ const GEAR_EMOJI = (gear) => {
 };
 
 export default function HomeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [inSeasonFish, setInSeasonFish] = useState([]);
   const [today, setToday] = useState(TODAY_STATIC);
   const [locationName, setLocationName] = useState('Milwaukee, WI');
@@ -60,7 +62,7 @@ export default function HomeScreen({ navigation }) {
   const goToWeather = useCallback(() => navigation.navigate('Weather'), [navigation]);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingTop: insets.top }]}>
 
       {/* ══ WEATHER HERO ══════════════════════════════════════ */}
       <View style={styles.weatherHero}>
