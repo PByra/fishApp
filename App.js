@@ -23,6 +23,7 @@ const TAB_ICONS = {
 
 function AppNavigator() {
   const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom > 0 ? insets.bottom : 24;
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -34,8 +35,8 @@ function AppNavigator() {
         tabBarStyle: {
           backgroundColor: '#F5F1E8',
           borderTopColor: '#E0D7CE',
-          height: 60 + insets.bottom,
-          paddingBottom: 8 + insets.bottom,
+          height: 60 + bottomInset,
+          paddingBottom: 8 + bottomInset,
         },
         tabBarLabelStyle: {
           fontSize: 10,
