@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import HomeScreen from './src/screens/HomeScreen';
 import WeatherScreen from './src/screens/WeatherScreen';
@@ -21,38 +21,45 @@ const TAB_ICONS = {
   Journal: 'book-open',
 };
 
+function AppNavigator() {
+  const insets = useSafeAreaInsets();
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => (
+          <Feather name={TAB_ICONS[route.name] || 'circle'} size={size} color={color} />
+        ),
+        tabBarActiveTintColor: '#3B4B48',
+        tabBarInactiveTintColor: '#9E9E9E',
+        tabBarStyle: {
+          backgroundColor: '#F5F1E8',
+          borderTopColor: '#E0D7CE',
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+        },
+        headerShown: false,
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
+      <Tab.Screen name="Search" component={SearchNavigateScreen} options={{ tabBarLabel: 'Spots' }} />
+      <Tab.Screen name="Seasonal" component={SeasonalScreen} options={{ tabBarLabel: 'WI Fish' }} />
+      <Tab.Screen name="Journal" component={JournalScreen} options={{ tabBarLabel: 'Journal' }} />
+      <Tab.Screen name="Weather" component={WeatherScreen} options={{ tabBarLabel: 'Weather' }} />
+      <Tab.Screen name="Supplies" component={SuppliesScreen} options={{ tabBarLabel: 'Gear' }} />
+    </Tab.Navigator>
+  );
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => (
-            <Feather name={TAB_ICONS[route.name] || 'circle'} size={size} color={color} />
-          ),
-          tabBarActiveTintColor: '#3B4B48',
-          tabBarInactiveTintColor: '#9E9E9E',
-          tabBarStyle: {
-            backgroundColor: '#F5F1E8',
-            borderTopColor: '#E0D7CE',
-            height: 60,
-            paddingBottom: 8,
-          },
-          tabBarLabelStyle: {
-            fontSize: 10,
-            fontWeight: '600',
-          },
-          headerShown: false,
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-        <Tab.Screen name="Search" component={SearchNavigateScreen} options={{ tabBarLabel: 'Spots' }} />
-        <Tab.Screen name="Seasonal" component={SeasonalScreen} options={{ tabBarLabel: 'WI Fish' }} />
-        <Tab.Screen name="Journal" component={JournalScreen} options={{ tabBarLabel: 'Journal' }} />
-        <Tab.Screen name="Weather" component={WeatherScreen} options={{ tabBarLabel: 'Weather' }} />
-        <Tab.Screen name="Supplies" component={SuppliesScreen} options={{ tabBarLabel: 'Gear' }} />
-      </Tab.Navigator>
-    </NavigationContainer>
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }
