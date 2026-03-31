@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(eas build:*)",
+      "WebFetch(domain:docs.expo.dev)",
+      "WebSearch"
+    ]
+  }
+}

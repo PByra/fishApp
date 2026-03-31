@@ -8,7 +8,7 @@ import { wisconsinSupplies } from '../data/wisconsinSupplies';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 import { loadMyGear, addGearItem, deleteGearItem } from '../services/gearStorage';
 
-const SUPPLY_CATS = ['All', 'Rods', 'Reels', 'Fishing Line', 'Lures & Bait', 'Tackle Organization', 'Clothing'];
+const SUPPLY_CATS = ['All', 'Full Tackle Store', 'Rods', 'Reels', 'Fishing Line', 'Lures & Bait', 'Tackle Organization', 'Clothing'];
 
 const GEAR_TAGS = ['Rod', 'Reel', 'Line', 'Lure', 'Bait', 'Terminal Tackle', 'Net', 'Electronics', 'Clothing', 'Other'];
 

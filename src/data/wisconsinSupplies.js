@@ -87,14 +87,14 @@ export const wisconsinSupplies = [
     id: 8,
     name: 'Reaction Tackle',
     brand: 'Reaction Tackle',
-    category: 'Fishing Line',
+    category: 'Full Tackle Store',
     priceRange: 'Budget/Medium',
-    price: '$10-$40',
+    price: '$10-$100+',
     location: 'Big Bend, WI',
-    link: 'https://reactiontackle.com',
-    wisconsinConnection: 'Affordable braided lines and tungsten from Big Bend, WI',
+    link: 'https://www.reactiontackle.com/PATRICK74905',
+    wisconsinConnection: 'Wisconsin-based full tackle store — rods, reels, line, lures, tungsten & more from Big Bend, WI',
     rating: 4.6,
-    forFish: ['Pike', 'Bass', 'Musky']
+    forFish: ['All Species']
   },
   {
     id: 9,
