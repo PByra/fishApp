@@ -107,6 +107,40 @@ export const shareLocation = async (location) => {
 };
 
 /**
+ * Launch navigation directly to GPS coordinates (used for secret spots)
+ * @param {number} lat
+ * @param {number} lng
+ * @param {string} label - Pin label shown in Maps
+ */
+export const launchNavigationByCoords = async (lat, lng, label = 'Fishing Spot') => {
+  try {
+    const encodedLabel = encodeURIComponent(label);
+    if (Platform.OS === 'android') {
+      // geo:lat,lng?q=lat,lng(Label) — drops a pin at exact coordinates
+      const geoUrl = `geo:${lat},${lng}?q=${lat},${lng}(${encodedLabel})`;
+      try {
+        await Linking.openURL(geoUrl);
+      } catch {
+        await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+      }
+    } else if (Platform.OS === 'ios') {
+      const appleMapsUrl = `maps://maps.apple.com/?ll=${lat},${lng}&q=${encodedLabel}`;
+      const canOpen = await Linking.canOpenURL(appleMapsUrl);
+      if (canOpen) {
+        await Linking.openURL(appleMapsUrl);
+      } else {
+        await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+      }
+    } else {
+      await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+    }
+  } catch (error) {
+    console.error('Coordinate navigation error:', error);
+    Alert.alert('Navigation Error', `Could not open maps for "${label}". Please try again.`, [{ text: 'OK' }]);
+  }
+};
+
+/**
  * Validate search query
  * @param {string} query - Query to validate
  * @returns {boolean}
@@ -117,6 +151,7 @@ export const isValidQuery = (query) => {
 
 export default {
   launchNavigation,
+  launchNavigationByCoords,
   openWebMaps,
   buildSearchQuery,
   shareLocation,

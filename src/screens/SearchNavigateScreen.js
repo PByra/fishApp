@@ -5,7 +5,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { bodiesOfWater, getWatersByRegion, searchSpots } from '../data/wisconsinWaters';
-import { launchNavigation } from '../services/navigationService';
+import { launchNavigation, launchNavigationByCoords } from '../services/navigationService';
 import { loadSecretSpots, saveSecretSpot, deleteSecretSpot } from '../services/secretSpotStorage';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
@@ -349,10 +349,7 @@ export default function SearchNavigateScreen() {
                     <View style={styles.secretSpotActions}>
                       <TouchableOpacity
                         style={styles.secretGoBtn}
-                        onPress={() => {
-                          const q = `geo:${spot.lat},${spot.lng}?q=${spot.lat},${spot.lng}(${encodeURIComponent(spot.name)})`;
-                          launchNavigation(q, spot.name);
-                        }}
+                        onPress={() => launchNavigationByCoords(spot.lat, spot.lng, spot.name)}
                         activeOpacity={0.85}
                       >
                         <Feather name="navigation-2" size={13} color="#fff" />
