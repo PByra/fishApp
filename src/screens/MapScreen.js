@@ -23,11 +23,12 @@ MapLibreGL.setAccessToken(null);
 // Wisconsin center + bounding box
 const WI_LNG = -89.5;
 const WI_LAT = 44.5;
-const WI_ZOOM = 7.0;
+const WI_ZOOM = 6.4;
 const WI_BOUNDS = [[-92.89, 42.49], [-86.25, 47.31]];
 
-// Polygon covering the whole world with a rectangular hole for Wisconsin.
-// Rendered as a dim fill layer — visually masks everything outside the state.
+// World polygon with Wisconsin's geographic outline as the hole.
+// Hole ring is clockwise (GeoJSON spec for holes). Non-self-intersecting.
+// Door Peninsula is simplified — at z6 the sliver is not meaningful.
 const WI_MASK = {
   type: 'FeatureCollection',
   features: [{
@@ -35,10 +36,41 @@ const WI_MASK = {
     geometry: {
       type: 'Polygon',
       coordinates: [
-        // Outer ring — world
+        // Outer ring — world (counterclockwise)
         [[-180, -85], [-180, 85], [180, 85], [180, -85], [-180, -85]],
-        // Inner ring (hole) — Wisconsin bounding box
-        [[-92.89, 42.49], [-86.25, 42.49], [-86.25, 47.31], [-92.89, 47.31], [-92.89, 42.49]],
+        // Hole — Wisconsin outline (clockwise: SW → north → Lake Superior → NE coast → Lake Michigan → south border → SW)
+        [
+          [-92.88, 42.50],
+          // St. Croix / Mississippi — western border going north
+          [-92.80, 43.00], [-92.75, 43.40], [-92.75, 44.00],
+          [-92.50, 44.40], [-92.30, 44.70], [-92.00, 45.00],
+          [-91.65, 45.40], [-91.20, 45.60], [-90.75, 45.70],
+          [-90.14, 46.00], [-89.62, 46.20], [-89.10, 46.28],
+          // Lake Superior coast going east
+          [-88.70, 46.80], [-88.10, 46.95], [-87.82, 47.07],
+          // Michigan/Wisconsin NE border going south
+          [-87.64, 46.82], [-87.24, 46.63], [-87.02, 46.57],
+          [-86.55, 46.48],
+          // NE Wisconsin — Green Bay western shore going south
+          [-86.60, 46.07], [-86.84, 45.87], [-87.05, 45.68],
+          [-87.25, 45.47], [-87.47, 45.24], [-87.63, 44.97],
+          [-87.79, 44.55],
+          // Lake Michigan coast going south
+          [-87.85, 44.28], [-87.74, 44.10], [-87.64, 43.94],
+          [-87.53, 43.73], [-87.56, 43.54], [-87.67, 43.36],
+          [-87.78, 43.22], [-87.78, 43.05], [-87.75, 42.84],
+          [-87.76, 42.62], [-87.84, 42.50],
+          // Southern border going west
+          [-88.20, 42.50], [-88.80, 42.50], [-89.40, 42.50],
+          [-89.90, 42.50], [-90.40, 42.50], [-90.80, 42.50],
+          [-91.14, 42.78], [-91.07, 43.09], [-91.17, 43.37],
+          [-91.24, 43.57], [-91.30, 43.81], [-91.37, 44.02],
+          [-91.48, 44.25], [-91.65, 44.47], [-91.88, 44.68],
+          [-92.09, 44.75], [-92.32, 44.84], [-92.44, 45.06],
+          [-92.63, 45.28], [-92.72, 45.56], [-92.75, 45.88],
+          [-92.75, 46.08], [-92.76, 46.38], [-92.81, 46.65],
+          [-92.88, 42.50],
+        ],
       ],
     },
     properties: {},
@@ -126,8 +158,7 @@ export default function MapScreen() {
           (_pack, status) => {
             if (status?.percentage === 100) setOfflineStatus('ready');
           },
-          (_pack, err) => {
-            console.warn('Offline pack error:', err);
+          () => {
             setOfflineStatus('idle');
           }
         );
@@ -178,7 +209,7 @@ export default function MapScreen() {
         attributionEnabled={false}
         logoEnabled={false}
         compassEnabled
-        compassViewPosition={3}
+        compassViewPosition={1}
         minZoomLevel={6}
         maxBounds={{ ne: [-86.25, 47.31], sw: [-92.89, 42.49] }}
       >
@@ -198,7 +229,7 @@ export default function MapScreen() {
         <MapLibreGL.ShapeSource id="wiMask" shape={WI_MASK}>
           <MapLibreGL.FillLayer
             id="wiMaskFill"
-            style={{ fillColor: 'rgba(18, 32, 21, 0.55)', fillOpacity: 1 }}
+            style={{ fillColor: 'rgba(14, 38, 70, 0.96)', fillOpacity: 1 }}
           />
         </MapLibreGL.ShapeSource>
 
@@ -349,8 +380,8 @@ export default function MapScreen() {
             {/* Fish species */}
             <Text style={styles.sectionLabel}>FISH HERE</Text>
             <View style={styles.fishRow}>
-              {(selectedSpot.fish || []).map((f, i) => (
-                <View key={i} style={styles.fishChip}>
+              {(selectedSpot.fish || []).map((f) => (
+                <View key={f} style={styles.fishChip}>
                   <Text style={styles.fishChipText}>{f}</Text>
                 </View>
               ))}

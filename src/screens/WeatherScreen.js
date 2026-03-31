@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { FORECAST as STATIC_FORECAST } from '../data/weatherData';
@@ -273,6 +274,7 @@ const barStyles = StyleSheet.create({
 });
 
 export default function WeatherScreen() {
+  const insets = useSafeAreaInsets();
   const [forecast, setForecast] = useState(STATIC_FORECAST);
   const [locationName, setLocationName] = useState('Milwaukee, WI');
   const today = forecast[0];
@@ -305,7 +307,7 @@ export default function WeatherScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.sm }]}
       showsVerticalScrollIndicator={false}
     >
 
@@ -373,7 +375,7 @@ export default function WeatherScreen() {
         <View style={styles.forecastCard}>
           {forecast.map((day, i) => (
             <View
-              key={i}
+              key={day.abbr + day.date}
               style={[styles.fRow, i < forecast.length - 1 && styles.fDivider]}
             >
               <Text style={styles.fEmoji}>{day.emoji}</Text>
@@ -420,7 +422,7 @@ export default function WeatherScreen() {
             { day: 'Saturday', color: '#4CAF50', note: 'Morning window before the south wind picks up after noon.' },
             { day: 'Today',    color: '#FF9800', note: 'Midday when temps peak. Perch and crappie most active.' },
           ].map((w, i) => (
-            <View key={i} style={[styles.windowRow, i > 0 && styles.windowDivider]}>
+            <View key={w.day} style={[styles.windowRow, i > 0 && styles.windowDivider]}>
               <View style={[styles.windowDot, { backgroundColor: w.color }]} />
               <Text style={styles.windowText}>
                 <Text style={styles.windowBold}>{w.day}: </Text>{w.note}

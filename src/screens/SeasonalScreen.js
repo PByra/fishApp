@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentInSeasonFish } from '../data/seasonalData';
 import { colors, spacing, shadows, typography } from '../theme/colors';
@@ -102,6 +103,7 @@ const FishCard = memo(function FishCard({ item, isOpen, onToggle, cardRefs }) {
 });
 
 export default function SeasonalScreen({ route }) {
+  const insets = useSafeAreaInsets();
   const [fish, setFish] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -144,7 +146,7 @@ export default function SeasonalScreen({ route }) {
     <View style={styles.container}>
 
       {/* ── HEADER ──────────────────────────────────────────── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Wisconsin Fish Seasons</Text>
         <Text style={styles.headerSub}>Tap any fish for gear, tips & field ID photo</Text>
         <View style={styles.statsRow}>
@@ -207,7 +209,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary.forest,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    // paddingTop set inline with insets.top
     paddingBottom: spacing.md,
   },
   headerTitle: {

@@ -6,6 +6,7 @@ import { getCurrentInSeasonFish } from '../data/seasonalData';
 import * as Location from 'expo-location';
 import { TODAY as TODAY_STATIC } from '../data/weatherData';
 import { fetchWeather } from '../services/weatherService';
+import { loadEntries } from '../services/journalStorage';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 
 const GEAR_EMOJI = (gear) => {
@@ -24,9 +25,11 @@ export default function HomeScreen({ navigation }) {
   const [inSeasonFish, setInSeasonFish] = useState([]);
   const [today, setToday] = useState(TODAY_STATIC);
   const [locationName, setLocationName] = useState('Milwaukee, WI');
+  const [recentCatches, setRecentCatches] = useState([]);
 
   useEffect(() => {
     setInSeasonFish(getCurrentInSeasonFish());
+    loadEntries().then(entries => setRecentCatches(entries.slice(0, 2))).catch(() => {});
     (async () => {
       let lat = 43.0389, lng = -87.9065, name = 'Milwaukee, WI';
       try {
@@ -154,44 +157,48 @@ export default function HomeScreen({ navigation }) {
         </View>
       )}
 
-      {/* ══ DASHBOARD GRID ════════════════════════════════════ */}
+      {/* ══ RECENT CATCHES ════════════════════════════════════ */}
       <View style={styles.section}>
         <View style={styles.sectionHeadRow}>
           <View style={styles.sectionHeadLeft}>
             <View style={styles.sectionAccentBar} />
-            <Text style={styles.sectionHeadText}>QUICK ACCESS</Text>
+            <Text style={styles.sectionHeadText}>RECENT CATCHES</Text>
           </View>
-        </View>
-
-        <View style={styles.dashGrid}>
-          <TouchableOpacity style={[styles.dashCard, styles.dashCardLarge, { backgroundColor: colors.primary.forest }]}
-            onPress={goToSearch}>
-            <Feather name="search" size={28} color={colors.accent.wasabi} />
-            <Text style={[styles.dashLabel, { color: '#fff' }]}>Search & Fish</Text>
-            <Text style={[styles.dashSub, { color: colors.accent.wasabi }]}>Find your spot</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#F7EDDE', borderColor: colors.accent.persimmon }]}
-            onPress={goToJournal}>
-            <Feather name="book-open" size={24} color={colors.accent.persimmon} />
-            <Text style={[styles.dashLabel, { color: colors.accent.persimmon }]}>Journal</Text>
-            <Text style={styles.dashSub}>Log catches</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E8EFE4', borderColor: colors.accent.wasabi }]}
-            onPress={goToSupplies}>
-            <Feather name="shopping-cart" size={24} color={colors.primary.forest} />
-            <Text style={[styles.dashLabel, { color: colors.primary.forest }]}>WI Gear</Text>
-            <Text style={styles.dashSub}>Local brands</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.dashCard, { backgroundColor: '#E4EEF7', borderColor: colors.environment.riverBlue }]}
-            onPress={goToWeather}>
-            <Feather name="cloud" size={24} color={colors.environment.riverBlue} />
-            <Text style={[styles.dashLabel, { color: colors.environment.riverBlue }]}>Forecast</Text>
-            <Text style={styles.dashSub}>7-day outlook</Text>
+          <TouchableOpacity onPress={goToJournal} style={styles.seeAllBtn}>
+            <Text style={styles.seeAllText}>All Catches</Text>
+            <Feather name="chevron-right" size={14} color={colors.accent.persimmon} />
           </TouchableOpacity>
         </View>
+
+        {recentCatches.length > 0 ? (
+          recentCatches.map((entry) => (
+            <TouchableOpacity
+              key={entry.id}
+              style={styles.catchCard}
+              onPress={goToJournal}
+              activeOpacity={0.85}
+            >
+              <View style={styles.catchIconWrap}>
+                <Text style={styles.catchEmoji}>🐟</Text>
+              </View>
+              <View style={styles.catchInfo}>
+                <Text style={styles.catchFish}>{entry.fishSpecies}</Text>
+                <Text style={styles.catchLocation} numberOfLines={1}>
+                  <Feather name="map-pin" size={11} color={colors.neutral.textSecondary} /> {entry.location}
+                </Text>
+              </View>
+              <Text style={styles.catchDate}>
+                {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </Text>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <TouchableOpacity style={styles.emptyCatchCard} onPress={goToJournal} activeOpacity={0.85}>
+            <Feather name="book-open" size={20} color={colors.accent.persimmon} />
+            <Text style={styles.emptyCatchText}>Log your first catch</Text>
+            <Feather name="chevron-right" size={16} color={colors.accent.persimmon} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* ══ REMINDERS ═════════════════════════════════════════ */}
@@ -407,40 +414,60 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Dashboard grid
-  dashGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  dashCard: {
-    width: '47.5%',
-    borderRadius: 16,
-    padding: spacing.md,
-    gap: spacing.xs,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-    minHeight: 100,
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-  dashCardLarge: {
-    width: '100%',
+  // Recent catches
+  catchCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFDF6',
+    borderRadius: 14,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
     gap: spacing.md,
-    minHeight: 72,
-    justifyContent: 'flex-start',
+    ...shadows.sm,
   },
-  dashLabel: {
+  catchIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EEF2EA',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  catchEmoji: { fontSize: 20 },
+  catchInfo: { flex: 1 },
+  catchFish: {
     fontSize: typography.body.fontSize,
     fontWeight: '700',
     color: colors.primary.forest,
+    marginBottom: 2,
   },
-  dashSub: {
+  catchLocation: {
     fontSize: typography.caption.fontSize,
     color: colors.neutral.textSecondary,
     fontWeight: '500',
+  },
+  catchDate: {
+    fontSize: 12,
+    color: colors.neutral.textSecondary,
+    fontWeight: '600',
+  },
+  emptyCatchCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFDF6',
+    borderRadius: 14,
+    padding: spacing.md,
+    gap: spacing.sm,
+    borderWidth: 1.5,
+    borderColor: '#DDB898',
+    borderStyle: 'dashed',
+    ...shadows.sm,
+  },
+  emptyCatchText: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+    color: colors.accent.persimmon,
   },
 
   // Reminders

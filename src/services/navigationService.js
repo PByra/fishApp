@@ -25,8 +25,6 @@ export const launchNavigation = async (query, locationName = 'Location') => {
       try {
         await Linking.openURL(geoUrl);
       } catch (error) {
-        // Fallback to web-based Google Maps if geo intent fails
-        console.log('Geo intent failed, falling back to web Maps');
         await openWebMaps(query);
       }
     } else if (Platform.OS === 'ios') {
@@ -48,7 +46,6 @@ export const launchNavigation = async (query, locationName = 'Location') => {
       await openWebMaps(query);
     }
   } catch (error) {
-    console.error('Navigation error:', error);
     Alert.alert(
       'Navigation Error',
       `Could not open maps for "${locationName}". Please try again or use the manual search.`,
@@ -65,8 +62,7 @@ export const openWebMaps = async (query) => {
   try {
     const webMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
     await Linking.openURL(webMapsUrl);
-  } catch (error) {
-    console.error('Web Maps error:', error);
+  } catch {
     Alert.alert('Error', 'Could not open Google Maps');
   }
 };
@@ -101,8 +97,8 @@ export const shareLocation = async (location) => {
     // For React Native, we would use Share API
     // For now, just copy to URL
     return message;
-  } catch (error) {
-    console.error('Share error:', error);
+  } catch {
+    // share failed silently
   }
 };
 
@@ -134,8 +130,7 @@ export const launchNavigationByCoords = async (lat, lng, label = 'Fishing Spot')
     } else {
       await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
     }
-  } catch (error) {
-    console.error('Coordinate navigation error:', error);
+  } catch {
     Alert.alert('Navigation Error', `Could not open maps for "${label}". Please try again.`, [{ text: 'OK' }]);
   }
 };

@@ -64,7 +64,10 @@ export async function fetchWeather(lat = DEFAULT_LAT, lng = DEFAULT_LNG) {
     'forecast_days=7',
   ].join('&');
 
-  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: controller.signal });
+  clearTimeout(timeout);
   if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
   const { daily } = await res.json();
 

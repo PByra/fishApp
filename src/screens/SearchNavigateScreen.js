@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Linking,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { bodiesOfWater, getWatersByRegion, searchSpots } from '../data/wisconsinWaters';
@@ -52,6 +53,7 @@ const typeStyle = (type) =>
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function SearchNavigateScreen() {
+  const insets = useSafeAreaInsets();
   const [selectedRegion, setSelectedRegion]   = useState('Southeast');
   const [searchQuery, setSearchQuery]         = useState('');
   const [expandedWater, setExpandedWater]     = useState(null);
@@ -63,6 +65,7 @@ export default function SearchNavigateScreen() {
   const [addingLocation, setAddingLocation]   = useState(false);
   const [manualLat, setManualLat]             = useState('');
   const [manualLng, setManualLng]             = useState('');
+  const [showManualCoords, setShowManualCoords] = useState(false);
 
   // Load secret spots on mount
   useEffect(() => {
@@ -154,6 +157,7 @@ export default function SearchNavigateScreen() {
     setAddNotes('');
     setManualLat('');
     setManualLng('');
+    setShowManualCoords(false);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -162,7 +166,7 @@ export default function SearchNavigateScreen() {
     <View style={styles.container}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Search & Fish</Text>
         <Text style={styles.headerSubtitle}>Wisconsin — Bodies of Water</Text>
       </View>
@@ -192,21 +196,17 @@ export default function SearchNavigateScreen() {
         keyboardShouldPersistTaps="handled"
       >
 
-        {/* ── BETA BANNER ──────────────────────────────────────────────── */}
-        <View style={styles.betaBanner}>
-          <Feather name="alert-triangle" size={14} color="#fff" style={{ marginTop: 1 }} />
-          <Text style={styles.betaBannerText}>
-            <Text style={styles.betaBold}>BETA — </Text>
-            Locations may not be accurate for public use. Check restrictions before entering locations.
-            Please reach out if a location is incorrect.
+        {/* ── INFO NOTE ────────────────────────────────────────────────── */}
+        <View style={styles.infoNote}>
+          <Feather name="info" size={13} color={colors.accent.wasabi} style={{ marginTop: 1 }} />
+          <Text style={styles.infoNoteText}>
+            Always verify access and regulations before fishing a new spot.
           </Text>
           <TouchableOpacity
-            style={styles.betaReportBtn}
             onPress={() => Linking.openURL('https://github.com/PByra/fishApp/issues')}
-            activeOpacity={0.8}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Feather name="flag" size={12} color="#fff" />
-            <Text style={styles.betaReportText}>Report</Text>
+            <Feather name="flag" size={13} color={colors.neutral.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -286,35 +286,51 @@ export default function SearchNavigateScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.manualCoordsSection}>
-                <Text style={styles.manualCoordsLabel}>OR enter coordinates manually <Text style={styles.addFormOptional}>(optional)</Text></Text>
-                <View style={styles.manualCoordsRow}>
-                  <TextInput
-                    style={[styles.addFormInput, styles.manualCoordsInput]}
-                    placeholder="Latitude (43.0405)"
-                    placeholderTextColor={colors.neutral.gray400}
-                    value={manualLat}
-                    onChangeText={setManualLat}
-                    keyboardType="decimal-pad"
-                  />
-                  <TextInput
-                    style={[styles.addFormInput, styles.manualCoordsInput]}
-                    placeholder="Longitude (-87.9002)"
-                    placeholderTextColor={colors.neutral.gray400}
-                    value={manualLng}
-                    onChangeText={setManualLng}
-                    keyboardType="decimal-pad"
-                  />
+              <TouchableOpacity
+                style={styles.manualToggleBtn}
+                onPress={() => setShowManualCoords(v => !v)}
+                activeOpacity={0.7}
+              >
+                <Feather
+                  name={showManualCoords ? 'chevron-up' : 'chevron-down'}
+                  size={14}
+                  color={colors.neutral.textSecondary}
+                />
+                <Text style={styles.manualToggleText}>
+                  {showManualCoords ? 'Hide coordinate entry' : 'Enter coordinates manually instead'}
+                </Text>
+              </TouchableOpacity>
+
+              {showManualCoords && (
+                <View style={styles.manualCoordsSection}>
+                  <View style={styles.manualCoordsRow}>
+                    <TextInput
+                      style={[styles.addFormInput, styles.manualCoordsInput]}
+                      placeholder="Latitude (43.0405)"
+                      placeholderTextColor={colors.neutral.gray400}
+                      value={manualLat}
+                      onChangeText={setManualLat}
+                      keyboardType="decimal-pad"
+                    />
+                    <TextInput
+                      style={[styles.addFormInput, styles.manualCoordsInput]}
+                      placeholder="Longitude (-87.9002)"
+                      placeholderTextColor={colors.neutral.gray400}
+                      value={manualLng}
+                      onChangeText={setManualLng}
+                      keyboardType="decimal-pad"
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={styles.manualSaveBtn}
+                    onPress={handleSaveManual}
+                    activeOpacity={0.85}
+                  >
+                    <Feather name="save" size={14} color={colors.primary.forest} />
+                    <Text style={styles.manualSaveBtnText}>Save with Coordinates</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                  style={styles.manualSaveBtn}
-                  onPress={handleSaveManual}
-                  activeOpacity={0.85}
-                >
-                  <Feather name="save" size={14} color={colors.primary.forest} />
-                  <Text style={styles.manualSaveBtnText}>Save with Coordinates</Text>
-                </TouchableOpacity>
-              </View>
+              )}
             </View>
           )}
 
@@ -456,8 +472,8 @@ export default function SearchNavigateScreen() {
 
                 {/* Fish species chips */}
                 <View style={styles.fishRow}>
-                  {water.fish.map((f, i) => (
-                    <View key={i} style={styles.fishChip}>
+                  {water.fish.map((f) => (
+                    <View key={f} style={styles.fishChip}>
                       <Text style={styles.fishChipText}>{f}</Text>
                     </View>
                   ))}
@@ -489,8 +505,8 @@ export default function SearchNavigateScreen() {
                           </View>
 
                           <View style={styles.spotFishRow}>
-                            {spot.fish.map((f, i) => (
-                              <View key={i} style={styles.spotFishPill}>
+                            {spot.fish.map((f) => (
+                              <View key={f} style={styles.spotFishPill}>
                                 <Text style={styles.spotFishText}>{f}</Text>
                               </View>
                             ))}
@@ -541,7 +557,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary.forest,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    // paddingTop is set inline with insets.top
     paddingBottom: spacing.md,
   },
   headerTitle: {
@@ -589,39 +605,24 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
 
-  // ── Beta banner
-  betaBanner: {
+  // ── Info note (replaces beta banner)
+  infoNote: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#C62828',
-    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: colors.primary.darkForest,
+    borderRadius: 10,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
     gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(196,160,84,0.25)',
   },
-  betaBannerText: {
+  infoNoteText: {
     flex: 1,
     fontSize: 11,
-    color: '#fff',
+    color: colors.neutral.gray400,
     fontWeight: '500',
-    lineHeight: 16,
-  },
-  betaBold: { fontWeight: '800' },
-  betaReportBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 8,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
-  },
-  betaReportText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#fff',
+    lineHeight: 15,
   },
 
   // ── Secret spots section
@@ -745,19 +746,23 @@ const styles = StyleSheet.create({
     color: colors.neutral.textSecondary,
   },
 
-  // ── Manual coordinates
-  manualCoordsSection: {
-    borderTopWidth: 1,
-    borderTopColor: colors.neutral.borderLight,
-    paddingTop: spacing.sm,
-    gap: spacing.sm,
+  // ── Manual coordinates toggle
+  manualToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: spacing.xs,
   },
-  manualCoordsLabel: {
+  manualToggleText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary.forest,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: colors.neutral.textSecondary,
+    fontWeight: '500',
+  },
+
+  // ── Manual coordinates section
+  manualCoordsSection: {
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
   },
   manualCoordsRow: {
     flexDirection: 'row',

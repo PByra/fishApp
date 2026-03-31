@@ -11,6 +11,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 import { loadEntries, saveEntry, deleteEntry } from '../services/journalStorage';
@@ -92,6 +93,7 @@ const EmptyState = () => (
 );
 
 export default function JournalScreen() {
+  const insets = useSafeAreaInsets();
   const [entries, setEntries] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [expandedEntry, setExpandedEntry] = useState(null);
@@ -214,7 +216,7 @@ export default function JournalScreen() {
   return (
     <View style={styles.container}>
       {/* ── HEADER ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View>
           <Text style={styles.headerTitle}>My Catch Journal</Text>
           <Text style={styles.headerSubtitle}>{entries.length} catch{entries.length !== 1 ? 'es' : ''} logged</Text>
@@ -365,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.primary.forest,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    // paddingTop set inline with insets.top
     paddingBottom: spacing.md,
   },
   headerTitle: {

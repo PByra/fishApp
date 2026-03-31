@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Linking, Alert, TextInput
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { wisconsinSupplies } from '../data/wisconsinSupplies';
 import { colors, spacing, shadows, typography } from '../theme/colors';
@@ -36,6 +37,7 @@ const PRICE_STYLE = {
 const ps = (r) => PRICE_STYLE[r] || { bg: '#F5F5F5', text: '#616161' };
 
 export default function SuppliesScreen() {
+  const insets = useSafeAreaInsets();
   const [selectedId, setSelectedId] = useState(null);
   const [category, setCategory]     = useState('All');
 
@@ -70,7 +72,7 @@ export default function SuppliesScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
       {/* ── HEADER ──────────────────────────────────────────── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Fishing Gear</Text>
         <Text style={styles.headerSub}>My Bag · Wisconsin Brands</Text>
       </View>
@@ -263,7 +265,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary.forest,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    // paddingTop set inline with insets.top
     paddingBottom: spacing.md,
   },
   headerTitle: {

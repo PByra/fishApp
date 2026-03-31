@@ -27,7 +27,7 @@ export const NavigateButton = ({ latitude, longitude, locationName, size = 'larg
           Linking.openURL(`https://maps.google.com/?q=${latitude},${longitude}`);
         }
       })
-      .catch(err => console.error('Error opening maps:', err));
+      .catch(() => {});
   };
 
   const buttonSize = size === 'large' ? touchTargets.large : touchTargets.medium;
