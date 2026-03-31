@@ -23,8 +23,27 @@ MapLibreGL.setAccessToken(null);
 // Wisconsin center + bounding box
 const WI_LNG = -89.5;
 const WI_LAT = 44.5;
-const WI_ZOOM = 5.8;
+const WI_ZOOM = 7.0;
 const WI_BOUNDS = [[-92.89, 42.49], [-86.25, 47.31]];
+
+// Polygon covering the whole world with a rectangular hole for Wisconsin.
+// Rendered as a dim fill layer — visually masks everything outside the state.
+const WI_MASK = {
+  type: 'FeatureCollection',
+  features: [{
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        // Outer ring — world
+        [[-180, -85], [-180, 85], [180, 85], [180, -85], [-180, -85]],
+        // Inner ring (hole) — Wisconsin bounding box
+        [[-92.89, 42.49], [-86.25, 42.49], [-86.25, 47.31], [-92.89, 47.31], [-92.89, 42.49]],
+      ],
+    },
+    properties: {},
+  }],
+};
 
 // Inline OSM raster style — no API key, tiles cache locally after first load
 const OSM_STYLE = JSON.stringify({
@@ -150,9 +169,9 @@ export default function MapScreen() {
   });
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <View style={styles.root}>
 
-      {/* ── MAP ─────────────────────────────────────────── */}
+      {/* ── MAP — fills edge-to-edge ─────────────────────── */}
       <MapLibreGL.MapView
         style={styles.map}
         styleJSON={OSM_STYLE}
@@ -160,6 +179,8 @@ export default function MapScreen() {
         logoEnabled={false}
         compassEnabled
         compassViewPosition={3}
+        minZoomLevel={6}
+        maxBounds={{ ne: [-86.25, 47.31], sw: [-92.89, 42.49] }}
       >
         <MapLibreGL.Camera
           ref={cameraRef}
@@ -172,6 +193,14 @@ export default function MapScreen() {
         {userCoords && (
           <MapLibreGL.UserLocation visible renderMode="native" />
         )}
+
+        {/* Dim mask — everything outside Wisconsin bounding box */}
+        <MapLibreGL.ShapeSource id="wiMask" shape={WI_MASK}>
+          <MapLibreGL.FillLayer
+            id="wiMaskFill"
+            style={{ fillColor: 'rgba(18, 32, 21, 0.55)', fillOpacity: 1 }}
+          />
+        </MapLibreGL.ShapeSource>
 
         {visibleSpots.map(spot => (
           <MapLibreGL.PointAnnotation
@@ -188,8 +217,14 @@ export default function MapScreen() {
         ))}
       </MapLibreGL.MapView>
 
+      {/* ── STATUS BAR SCRIM — readable over any map tile ── */}
+      <View
+        style={[styles.statusScrim, { height: insets.top }]}
+        pointerEvents="none"
+      />
+
       {/* ── REGION FILTER (floats over map at top) ─────── */}
-      <View style={styles.filterOverlay} pointerEvents="box-none">
+      <View style={[styles.filterOverlay, { top: insets.top + 8 }]} pointerEvents="box-none">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -218,7 +253,7 @@ export default function MapScreen() {
       {/* ── MY LOCATION button ─────────────────────────── */}
       {userCoords && (
         <TouchableOpacity
-          style={styles.locBtn}
+          style={[styles.locBtn, { bottom: spacing.xl + Math.max(insets.bottom, 8) }]}
           onPress={flyToMe}
           activeOpacity={0.85}
         >
@@ -227,13 +262,19 @@ export default function MapScreen() {
       )}
 
       {/* ── SPOT COUNT badge ───────────────────────────── */}
-      <View style={styles.countBadge} pointerEvents="none">
+      <View
+        style={[styles.countBadge, { bottom: spacing.xl + Math.max(insets.bottom, 8) }]}
+        pointerEvents="none"
+      >
         <Text style={styles.countText}>{visibleSpots.length} spots</Text>
       </View>
 
       {/* ── OFFLINE download indicator ─────────────────── */}
       {offlineStatus === 'downloading' && (
-        <View style={styles.offlineBanner} pointerEvents="none">
+        <View
+          style={[styles.offlineBanner, { bottom: spacing.xl + 52 + Math.max(insets.bottom, 8) }]}
+          pointerEvents="none"
+        >
           <ActivityIndicator size="small" color={colors.accent.wasabi} />
           <Text style={styles.offlineBannerText}>
             Saving Wisconsin map for offline use…
@@ -388,10 +429,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  // ── Status bar scrim ────────────────────────────────
+  statusScrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(18, 32, 21, 0.52)',
+    zIndex: 15,
+  },
+
   // ── Filter bar ──────────────────────────────────────
   filterOverlay: {
     position: 'absolute',
-    top: 12,
+    // top is set inline using insets.top
     left: 0,
     right: 0,
     zIndex: 10,
@@ -426,7 +477,7 @@ const styles = StyleSheet.create({
   locBtn: {
     position: 'absolute',
     right: spacing.md,
-    bottom: spacing.xl + 4,
+    // bottom set inline with insets
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -440,7 +491,7 @@ const styles = StyleSheet.create({
   countBadge: {
     position: 'absolute',
     left: spacing.md,
-    bottom: spacing.xl + 4,
+    // bottom set inline with insets
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 14,
@@ -456,7 +507,7 @@ const styles = StyleSheet.create({
   // ── Offline banner ──────────────────────────────────
   offlineBanner: {
     position: 'absolute',
-    bottom: spacing.xl + 52,
+    // bottom set inline with insets
     left: spacing.md,
     right: spacing.md,
     flexDirection: 'row',
