@@ -16,25 +16,27 @@ import MapLibreGL from '@maplibre/maplibre-react-native';
 import { bodiesOfWater, getRegions } from '../data/wisconsinWaters';
 import { colors, spacing, shadows, typography } from '../theme/colors';
 import { launchNavigation } from '../services/navigationService';
+import { fetchGaugeCondition } from '../services/usgsService';
 
 // Disable Mapbox token — not needed for MapLibre with OSM
 MapLibreGL.setAccessToken(null);
 
-// Wisconsin center + bounding box
-const WI_LNG = -89.9;
-const WI_LAT = 44.7;
-const WI_ZOOM = 6.2;
-// Tight bounds derived from real Census polygon extents
-const WI_BOUNDS = [[-93.0, 42.48], [-86.25, 47.10]];
+// Expanded center — shifted east to balance WI + Great Lakes + UP
+const WI_LNG = -88.5;
+const WI_LAT = 45.0;
+const WI_ZOOM = 5.5;
+// Expanded bounds: includes full Lake Michigan, Lake Superior, and UP Michigan
+const WI_BOUNDS = [[-93.5, 41.4], [-82.5, 48.6]];
 
-// Real Wisconsin border from US Census / PublicaMundi (74 points).
-// Source ring is CCW (RFC 7946 exterior). Reversed here to CW for use as a hole.
-// Outer world ring is CCW. MapLibre Native handles RFC 7946 winding correctly.
-const WI_HOLE_CW = [
+// Expanded visible region: Wisconsin land border + full Lake Michigan +
+// full Lake Superior (including Ontario north shore) + Upper Peninsula of Michigan.
+// CW winding for GeoJSON polygon hole (world outer ring is CCW).
+const EXPANDED_HOLE_CW = [
+  // ── Wisconsin land borders (west + south) — Census-derived, unchanged ──
   [-90.415429, 46.568478], [-90.55783, 46.584908], [-90.886446, 46.754694],
-  [-90.749522, 46.88614], [-90.837154, 46.95734], [-91.09457, 46.864232],
+  [-90.749522, 46.88614],  [-90.837154, 46.95734],  [-91.09457, 46.864232],
   [-91.790141, 46.694447], [-92.014696, 46.705401], [-92.091373, 46.749217],
-  [-92.29402, 46.667063], [-92.29402, 46.075553], [-92.354266, 46.015307],
+  [-92.29402, 46.667063],  [-92.29402, 46.075553],  [-92.354266, 46.015307],
   [-92.639067, 45.933153], [-92.869098, 45.719552], [-92.885529, 45.577151],
   [-92.770513, 45.566198], [-92.644544, 45.440228], [-92.75956, 45.286874],
   [-92.737652, 45.117088], [-92.808852, 44.750133], [-92.545959, 44.569394],
@@ -42,20 +44,43 @@ const WI_HOLE_CW = [
   [-91.877772, 44.202439], [-91.592971, 44.032654], [-91.43414, 43.994316],
   [-91.242447, 43.775238], [-91.269832, 43.616407], [-91.215062, 43.501391],
   [-91.204109, 43.353514], [-91.056231, 43.254929], [-91.176724, 43.134436],
-  [-91.143862, 42.909881], [-91.067185, 42.75105], [-90.711184, 42.636034],
+  [-91.143862, 42.909881], [-91.067185, 42.75105],  [-90.711184, 42.636034],
   [-90.639984, 42.510065], [-88.788778, 42.493634], [-87.802929, 42.493634],
-  [-87.76459, 42.783912], [-87.885083, 43.002989], [-87.912467, 43.249452],
-  [-87.791975, 43.561637], [-87.704344, 43.687607], [-87.737205, 43.8793],
-  [-87.644097, 44.103854], [-87.540035, 44.158624], [-87.545512, 44.322932],
-  [-87.468835, 44.552964], [-87.189511, 44.969211], [-87.047111, 45.089704],
-  [-87.03068, 45.22115], [-87.238804, 45.166381], [-87.403112, 44.914442],
-  [-87.611236, 44.837764], [-87.775544, 44.640595], [-87.928898, 44.536533],
-  [-88.043914, 44.563917], [-87.983668, 44.722749], [-87.819359, 44.95278],
-  [-87.627666, 44.974688], [-87.589328, 45.095181], [-87.742682, 45.199243],
-  [-87.649574, 45.341643], [-87.885083, 45.363551], [-87.791975, 45.500474],
-  [-87.781021, 45.675736], [-87.989145, 45.796229], [-88.10416, 45.922199],
-  [-88.531362, 46.020784], [-88.662808, 45.987922], [-89.09001, 46.135799],
-  [-90.119674, 46.338446], [-90.229213, 46.508231], [-90.415429, 46.568478],
+
+  // ── Lake Michigan southern shore (east toward southern tip) ──
+  [-87.10, 41.71],   // Illinois Lake Michigan coast
+  [-86.92, 41.63],   // Southern tip of Lake Michigan (near Michigan City, IN)
+
+  // ── Lake Michigan eastern shore (Michigan west coast, going north) ──
+  [-86.48, 42.11],   // Benton Harbor, MI
+  [-86.27, 43.24],   // Muskegon, MI
+  [-85.55, 44.13],   // Manistee, MI
+  [-85.26, 45.32],   // Charlevoix, MI
+  [-84.97, 45.37],   // Petoskey, MI
+  [-84.73, 45.78],   // Mackinaw City (south end of Mackinac Bridge)
+  [-84.73, 45.86],   // St. Ignace (north end, entering Upper Peninsula)
+
+  // ── Upper Peninsula east tip ───────────────────────────────
+  [-84.35, 46.50],   // Sault Ste. Marie (eastern tip of UP)
+
+  // ── Lake Superior north shore (Ontario, going west) ────────
+  [-84.85, 47.05],
+  [-86.00, 47.30],
+  [-87.40, 47.65],
+  [-88.50, 48.18],
+  [-90.00, 48.15],
+  [-91.50, 48.05],
+  [-92.50, 47.75],
+  [-92.87, 47.40],
+
+  // ── South to WI/MN Lake Superior coast, east back to start ──
+  [-92.12, 46.82],   // Superior, WI / Duluth, MN
+  [-91.54, 46.76],
+  [-91.09, 46.76],
+  [-90.70, 46.62],
+
+  // ── Close ─────────────────────────────────────────────────
+  [-90.415429, 46.568478],
 ];
 
 const WI_MASK = {
@@ -66,14 +91,19 @@ const WI_MASK = {
       type: 'Polygon',
       coordinates: [
         [[-180, -85], [-180, 85], [180, 85], [180, -85], [-180, -85]],
-        WI_HOLE_CW,
+        EXPANDED_HOLE_CW,
       ],
     },
     properties: {},
   }],
 };
 
-// Inline OSM raster style — no API key, tiles cache locally after first load
+// OpenFreeMap vector tile style — free, no API key, OSM-based.
+// Vector tiles render rivers/lakes/wetlands at all zoom levels with labels.
+// Falls back to OSM raster if unavailable.
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/bright';
+
+// Fallback OSM raster style for offline/error conditions
 const OSM_STYLE = JSON.stringify({
   version: 8,
   sources: {
@@ -115,6 +145,7 @@ export default function MapScreen() {
   const [selectedSpot, setSelectedSpot] = useState(null);
   const [userCoords, setUserCoords] = useState(null);
   const [offlineStatus, setOfflineStatus] = useState('idle'); // idle | downloading | ready
+  const [gaugeCondition, setGaugeCondition] = useState(null);
 
   const visibleSpots =
     regionFilter === 'All'
@@ -133,6 +164,16 @@ export default function MapScreen() {
     })();
   }, []);
 
+  // Fetch live USGS gauge condition when a river spot is opened
+  useEffect(() => {
+    if (!selectedSpot?.gaugeId) { setGaugeCondition(null); return; }
+    let cancelled = false;
+    fetchGaugeCondition(selectedSpot.gaugeId).then(r => {
+      if (!cancelled) setGaugeCondition(r);
+    });
+    return () => { cancelled = true; };
+  }, [selectedSpot?.id]);
+
   // Attempt to pre-download Wisconsin tile pack on first launch
   useEffect(() => {
     (async () => {
@@ -146,7 +187,7 @@ export default function MapScreen() {
         await MapLibreGL.offlineManager.createPack(
           {
             name: 'wi-tiles',
-            styleURL: OSM_STYLE,
+            styleURL: MAP_STYLE,
             minZoom: 4,
             maxZoom: 14,
             bounds: WI_BOUNDS,
@@ -201,13 +242,13 @@ export default function MapScreen() {
       {/* ── MAP — fills edge-to-edge ─────────────────────── */}
       <MapLibreGL.MapView
         style={styles.map}
-        styleJSON={OSM_STYLE}
+        styleURL={MAP_STYLE}
         attributionEnabled={false}
         logoEnabled={false}
         compassEnabled
         compassViewPosition={1}
-        minZoomLevel={6}
-        maxBounds={{ ne: [-86.25, 47.31], sw: [-92.89, 42.49] }}
+        minZoomLevel={5}
+        maxBounds={{ ne: [-82.0, 48.7], sw: [-93.5, 41.3] }}
       >
         <MapLibreGL.Camera
           ref={cameraRef}
@@ -220,6 +261,21 @@ export default function MapScreen() {
         {userCoords && (
           <MapLibreGL.UserLocation visible renderMode="native" />
         )}
+
+        {/* Wisconsin DNR hydrology overlay — rivers, streams, wetlands */}
+        <MapLibreGL.RasterSource
+          id="dnrHydro"
+          tileUrlTemplates={[
+            'https://dnrmaps.wi.gov/arcgis/rest/services/WM_Hydro/EN_WM_Hydro_BaseLayers_WM_Ext/MapServer/tile/{z}/{y}/{x}',
+          ]}
+          tileSize={256}
+        >
+          <MapLibreGL.RasterLayer
+            id="dnrHydroLayer"
+            style={{ rasterOpacity: 0.55 }}
+            layerIndex={2}
+          />
+        </MapLibreGL.RasterSource>
 
         {/* Dim mask — everything outside Wisconsin bounding box */}
         <MapLibreGL.ShapeSource id="wiMask" shape={WI_MASK}>
@@ -357,7 +413,40 @@ export default function MapScreen() {
               <Chip label={selectedSpot.region} />
               <Chip label={selectedSpot.difficulty || 'Varies'} accent />
               {selectedSpot.dogFriendly && <Chip label="Dog OK" dog />}
+              {selectedSpot.seclusionScore && (
+                <Chip
+                  label={`${selectedSpot.seclusionScore} Seclusion`}
+                  seclusion={selectedSpot.seclusionScore}
+                />
+              )}
             </View>
+
+            {/* Dog-friendly note */}
+            {selectedSpot.dogFriendlyNote && (
+              <View style={styles.dogNoteRow}>
+                <Text style={styles.dogNoteEmoji}>🐕</Text>
+                <Text style={styles.dogNoteText}>{selectedSpot.dogFriendlyNote}</Text>
+              </View>
+            )}
+
+            {/* Live water condition */}
+            {gaugeCondition && (
+              <View style={[styles.conditionRow, gaugeCondition.mudRisk && styles.conditionRowHigh]}>
+                <Feather
+                  name="droplet"
+                  size={14}
+                  color={gaugeCondition.mudRisk ? '#BF360C' : '#1565C0'}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.conditionLabel, gaugeCondition.mudRisk && styles.conditionLabelHigh]}>
+                    {gaugeCondition.label}
+                  </Text>
+                  <Text style={styles.conditionSub}>
+                    {gaugeCondition.gageHeight} ft · 7-day avg {gaugeCondition.sevenDayAvg} ft
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* Access point */}
             {selectedSpot.accessPoint ? (
@@ -431,13 +520,16 @@ function PinMarker({ isSelected, type = '' }) {
   );
 }
 
-function Chip({ label, accent, dog }) {
+function Chip({ label, accent, dog, seclusion }) {
   return (
     <View
       style={[
         styles.chip,
         accent && styles.chipAccent,
         dog && styles.chipDog,
+        seclusion === 'High' && styles.chipSeclusionHigh,
+        seclusion === 'Moderate' && styles.chipSeclusionMod,
+        seclusion === 'Low' && styles.chipSeclusionLow,
       ]}
     >
       <Text style={styles.chipText}>{label}</Text>
@@ -633,11 +725,67 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F7F4',
     borderColor: colors.accent.wasabi,
   },
+  chipSeclusionHigh: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#A5D6A7',
+  },
+  chipSeclusionMod: {
+    backgroundColor: '#FFF3E0',
+    borderColor: '#FFCC80',
+  },
+  chipSeclusionLow: {
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E0E0E0',
+  },
   chipText: {
     fontSize: 11,
     fontWeight: '600',
     color: colors.primary.forest,
     letterSpacing: 0.2,
+  },
+
+  // Dog note
+  dogNoteRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: spacing.sm,
+  },
+  dogNoteEmoji: { fontSize: 13, lineHeight: 18 },
+  dogNoteText: {
+    flex: 1,
+    fontSize: 12,
+    color: colors.neutral.textSecondary,
+    lineHeight: 17,
+    fontStyle: 'italic',
+  },
+
+  // Live condition
+  conditionRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 10,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: '#1565C0',
+  },
+  conditionRowHigh: {
+    backgroundColor: '#FBE9E7',
+    borderLeftColor: '#BF360C',
+  },
+  conditionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1565C0',
+  },
+  conditionLabelHigh: { color: '#BF360C' },
+  conditionSub: {
+    fontSize: 11,
+    color: colors.neutral.textSecondary,
+    marginTop: 2,
   },
 
   // Access
