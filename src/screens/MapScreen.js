@@ -48,15 +48,15 @@ const EXPANDED_HOLE_CW = [
   [-90.639984, 42.510065], [-88.788778, 42.493634], [-87.802929, 42.493634],
 
   // ── Lake Michigan southern shore (east toward southern tip) ──
-  [-87.10, 41.71],   // Illinois Lake Michigan coast
-  [-86.92, 41.63],   // Southern tip of Lake Michigan (near Michigan City, IN)
+  [-87.30, 41.71],   // Illinois Lake Michigan coast
+  [-87.20, 41.60],   // Southern tip of Lake Michigan (mid-water)
 
-  // ── Lake Michigan eastern shore (Michigan west coast, going north) ──
-  [-86.48, 42.11],   // Benton Harbor, MI
-  [-86.27, 43.24],   // Muskegon, MI
-  [-85.55, 44.13],   // Manistee, MI
-  [-85.26, 45.32],   // Charlevoix, MI
-  [-84.97, 45.37],   // Petoskey, MI
+  // ── Lake Michigan eastern shore — pulled ~0.4° west of actual MI shore ──
+  [-86.80, 42.20],   // south Lake Michigan (in water, west of Benton Harbor)
+  [-86.65, 43.24],   // mid lake (west of Muskegon)
+  [-86.00, 44.20],   // upper lake (west of Manistee)
+  [-85.60, 45.20],   // north lake (west of Charlevoix)
+  [-85.10, 45.55],   // approaching straits
   [-84.73, 45.78],   // Mackinaw City (south end of Mackinac Bridge)
   [-84.73, 45.86],   // St. Ignace (north end, entering Upper Peninsula)
 
@@ -71,10 +71,12 @@ const EXPANDED_HOLE_CW = [
   [-90.00, 48.15],
   [-91.50, 48.05],
   [-92.50, 47.75],
-  [-92.87, 47.40],
+  [-93.10, 47.50],   // extend NW — covers viewport top-left corner
+  [-93.30, 47.05],   // trace MN/Ontario border south
+  [-92.80, 46.85],   // western Lake Superior — near MN/WI border
 
   // ── South to WI/MN Lake Superior coast, east back to start ──
-  [-92.12, 46.82],   // Superior, WI / Duluth, MN
+  [-92.12, 46.78],   // Superior, WI / Duluth, MN
   [-91.54, 46.76],
   [-91.09, 46.76],
   [-90.70, 46.62],
