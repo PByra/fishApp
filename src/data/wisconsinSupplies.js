@@ -96,19 +96,6 @@ export const wisconsinSupplies = [
     rating: 4.6,
     forFish: ['All Species']
   },
-  {
-    id: 9,
-    name: 'Clear Blue Waters',
-    brand: 'Clear Blue Waters',
-    category: 'Fishing Line',
-    priceRange: 'Medium/High-End',
-    price: '$20-$60',
-    location: 'Eau Claire, WI',
-    link: 'https://clearbluewatersline.com',
-    wisconsinConnection: 'Specialized high-vis and specialized lines from Eau Claire, WI',
-    rating: 4.7,
-    forFish: ['All Species']
-  },
 
   // TACKLE BOXES & STORAGE
   {
@@ -192,19 +179,6 @@ export const wisconsinSupplies = [
     forFish: ['All Species']
   },
   {
-    id: 16,
-    name: 'IKE-CON Tackle',
-    brand: 'IKE-CON',
-    category: 'Lures & Bait',
-    priceRange: 'Medium',
-    price: '$8-$25',
-    location: 'Monona, WI',
-    link: 'https://ikecontackle.com',
-    wisconsinConnection: 'Pre-rigged worms and tackle from Monona, WI',
-    rating: 4.6,
-    forFish: ['Walleye', 'Bass', 'Perch']
-  },
-  {
     id: 17,
     name: 'Suick Lure Company',
     brand: 'Suick',
@@ -212,7 +186,7 @@ export const wisconsinSupplies = [
     priceRange: 'High-End',
     price: '$25-$50',
     location: 'Antigo, WI',
-    link: 'https://suicklures.com',
+    link: 'https://suick.com',
     wisconsinConnection: 'Legendary musky jerkbaits from Antigo, WI',
     rating: 4.9,
     forFish: ['Musky']
@@ -238,7 +212,7 @@ export const wisconsinSupplies = [
     priceRange: 'High-End',
     price: '$30-$60',
     location: 'Genoa City, WI',
-    link: 'https://joebucher.com',
+    link: 'https://joebuchertacklestore.com',
     wisconsinConnection: 'Elite big-game lures from Genoa City, WI',
     rating: 4.9,
     forFish: ['Musky', 'Pike']
@@ -266,7 +240,7 @@ export const wisconsinSupplies = [
     priceRange: 'Budget/Entry',
     price: '$3-$12',
     location: 'Stevens Point, WI',
-    link: 'https://worthcompany.com',
+    link: 'https://worthco.com/',
     wisconsinConnection: 'Manufactures components (split rings, blades) used by most brands from Stevens Point, WI',
     rating: 4.8,
     forFish: ['All Species']
@@ -366,19 +340,6 @@ export const wisconsinSupplies = [
     link: 'https://hookedandtagged.com',
     wisconsinConnection: 'Local fishing-culture apparel from Eagle River, WI',
     rating: 4.5,
-    forFish: ['All Species']
-  },
-  {
-    id: 29,
-    name: 'Borah Teamwear',
-    brand: 'Borah',
-    category: 'Clothing',
-    priceRange: 'Medium',
-    price: '$40-$120',
-    location: 'Coon Valley, WI',
-    link: 'https://borahteamwear.com',
-    wisconsinConnection: 'Custom sublimated jerseys used by pro fishing teams from Coon Valley, WI',
-    rating: 4.6,
     forFish: ['All Species']
   },
   {
