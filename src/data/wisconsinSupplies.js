@@ -76,7 +76,7 @@ export const wisconsinSupplies = [
     priceRange: 'Medium/High-End',
     price: '$300-$800',
     location: 'Park Falls, WI',
-    link: 'https://seviin.com',
+    link: 'https://seviinreels.com/',
     wisconsinConnection: 'Launched by St. Croix Rods founders in Park Falls, WI',
     rating: 4.8,
     forFish: ['All Species']
